@@ -4,7 +4,7 @@
 
 usage() {
     echo "Usage: CONFIG_DIR=\"<DIRECTORY>\" DOWNLOADS_DIR=\"<DIRECTORY>\" $0"
-    echo "Or you could omit DOWNLOADS_DIR to download files to current directory." 
+    echo "Or you could omit DOWNLOADS_DIR to download files to current directory."
 }
 
 CONFIG="$CONFIG_DIR/default"
@@ -49,6 +49,28 @@ if [ -z "$DOWNLOAD_DELAY" ]; then
     DOWNLOAD_DELAY=5
 fi
 
+if [ ! -z "$PERSISTENCE" ]; then
+    SQLITE=$(which sqlite3)
+    if [ -z $SQLITE ]; then
+        echo "ERROR: Persistence enabled, but `sqlite3` is not found"
+        echo "You probably need to install it."
+        exit 1
+    fi
+
+    # TODO: create $PERSISTENCE directory
+
+    DB="$PERSISTENCE/leech.db"
+    if [ ! -f "$DB" ]; then
+        echo "WARNING: Downloads DB doesn't exist, creating it at $DB"
+        sqlite3 "$DB" "PRAGMA auto_vacuum=FULL"
+        sqlite3 "$DB" "CREATE TABLE log (url_md5 TEXT, timestamp INTEGER)"
+        # TODO: check sqlite3 created DB
+    fi
+    if [ ! -z $EXPIRATION ]; then
+        EXPIRATION=$(($EXPIRATION * 86400)) # days * seconds in a day
+    fi
+fi
+
 # temporary file with RSS-feed
 LUNCH="$TMP/leech.lunch.$$"
 
@@ -58,14 +80,15 @@ WGET_LUNCH_OPTS="-q" # wget options for downloading lunch
 WGET_DOWNLOADS_OPTS="-q --content-disposition -c -i -" # wget options for downloading files
 # --content-disposition to correctly rip torrent's filename from script like torrents.php?id=xyz
 # -c for not re-downloading torrents
-# -i - : url (passed through stdin as output of xsltproc | grep | sed) 
+# -i - : url (passed through stdin as output of xsltproc | grep | sed)
 
 # misc options
 #
 GREP_OPTS="-i -E" # ignore case, extended regular expressions
 SED_OPTS="-r -e"     # enable extended regular expressions
-SED_REGEX="'s/^.* (.*)$/\1/'" # after XSLT processing, parse pairs "filename\sURL"
+SED_REGEX=".* (.+)\s*\+(.+)$" # \1 is URL, \2 is datetime in RFC822
 XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
+RFC822_TO_3339_STAGE1="s/(\w{3}),\s+([0-9]{2})\s+(\w{3})\s+([0-9]{4})\s+([0-9]{2}):([0-9]{2}):([0-9]{2}).*/\4-\3-\2 \5:\6:\7/" # in honor to king Leonidas
 
 # prepare environment
 #
@@ -83,6 +106,11 @@ rm -f "$LUNCH"
 if [ ! -z "$DOWNLOADS_DIR" ] && [ ! -d "$DOWNLOADS_DIR" ]; then
     echo "WARNING: Downloads directory \"$DOWNLOADS_DIR\" doesn't exist, creating it."
     mkdir -p "$DOWNLOADS_DIR"
+fi
+
+# get current time if needed
+if [ ! -z $EXPIRATION ]; then
+    NOW=$(date +%s)
 fi
 
 # downloading
@@ -117,7 +145,7 @@ do
             continue;
             ;;
     esac
- 
+
     # search lunch for patterns
     #
     while read PATTERN
@@ -133,30 +161,69 @@ do
                 ;;
         esac
 
-        URLS=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN" | sed $SED_OPTS 's/^.* (.*)$/\1/')
+        DATA=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN")
 
         # download urls if any
         #
-        if [ ! -z "$URLS" ]; then
-            for URL in $URLS; do
-                echo -n "Downloading file: $URL... "
+        echo "$DATA" | while read STR
+        do
+            URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
+            DATETIME=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
 
-                sleep $DOWNLOAD_DELAY
-                echo "$URL" | wget -P "$DOWNLOADS_DIR" $WGET_DOWNLOADS_OPTS
+            # datetime in RSS is in RFC822 format, it need to be converted to string understandable by `date`
+            DATESTRING=$(echo "$DATETIME" | sed $SED_OPTS "$RFC822_TO_3339_STAGE1" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
+            UNIXTIME=$(date -d "$DATESTRING" +%s)
 
+            # if expiration set, check RSS entry pub date
+            if [ ! -z $EXPIRATION ]; then
+                DIFF=$(($NOW - $UNIXTIME))
+                if [ $DIFF -gt $EXPIRATION ]; then
+                    echo "Skipping $URL: expired"
+                    continue
+                fi
+            fi
+
+            # if persistence enabled - check md5 of URL for duplicates
+            if [ ! -z "$DB" ]; then
+                MD5=$(echo -n "$URL" | md5sum)
+                MD5=$(expr substr "$MD5" 1 32)
+
+                sqlite3 "$DB" "SELECT url_md5 FROM log WHERE url_md5='$MD5'" | grep "$MD5" 2>&1 >/dev/null
                 case $? in
-                    0)
-                        echo "OK"
-                        ;;
-                    *)
-                        echo "Failed"
+                    0) # grep matched md5 sum - it's in DB, skip it
+                        echo "Skipping $URL: already downloaded"
+                        continue
                         ;;
                 esac
-            done;
-        fi
+            fi
+
+            echo -n "Downloading file: $URL... "
+
+            sleep $DOWNLOAD_DELAY
+            echo "$URL" | wget -P "$DOWNLOADS_DIR" $WGET_DOWNLOADS_OPTS
+
+            case $? in
+                0)
+                    echo "OK"
+                    ;;
+                *)
+                    echo "Failed"
+                    ;;
+            esac
+
+            # if persistence enabled, make a record in DB about downloaded file
+            if [ ! -z "$DB" ]; then
+                sqlite3 "$DB" "INSERT INTO log VALUES ('$MD5', strftime('%s', 'now'))"
+            fi
+        done
     done <"$DOWNLOADS"
-  
+
     # cleanup
     #
     rm -f "$LUNCH"
+
+    # delete old records from DB, but only if expiration period is set
+    if [ ! -z "$DB" -a ! -z "$EXPIRATION" ]; then
+        sqlite3 "$DB" "DELETE FROM log WHERE timestamp < $(($NOW - $EXPIRATION))"
+    fi
 done <"$FOODS"

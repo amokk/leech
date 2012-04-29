@@ -2,7 +2,7 @@
     <xsl:output method="text"/>
     <xsl:template match="/">
 	<xsl:for-each select="rss/channel/item">
-<xsl:value-of select="title"/><xsl:text> </xsl:text><xsl:value-of select="link"/>
+<xsl:value-of select="title"/><xsl:text> </xsl:text><xsl:value-of select="link"/><xsl:text></xsl:text> +<xsl:value-of select="pubDate"/>
 <xsl:text><!-- line break -->
 </xsl:text>
 	</xsl:for-each>
