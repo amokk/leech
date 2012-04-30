@@ -112,13 +112,6 @@ fi
 
 # create persistence dir and db
 if [ ! -z "$PERSISTENCE" ]; then
-    SQLITE=$(which sqlite3)
-    if [ -z $SQLITE ]; then
-        echo "ERROR: `sqlite3` is not found"
-        echo "You probably need to install it."
-        exit 1
-    fi
-
     if [ ! -d "$PERSISTENCE" ]; then
         mkdir -p "$PERSISTENCE"
         if [ ! $? -eq 0 ]; then
