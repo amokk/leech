@@ -77,7 +77,7 @@ XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
 
 # expiration and persistence options
 #
-RFC822_TO_3339_STAGE1="s/(\w{3}),\s+([0-9]{2})\s+(\w{3})\s+([0-9]{4})\s+([0-9]{2}):([0-9]{2}):([0-9]{2}).*/\4-\3-\2 \5:\6:\7/" # in honor to king Leonidas
+RFC822_TO_3339_STAGE1="s/[a-zA-Z]{3}, ([0-9]{2}) ([a-zA-Z]{3}|[0-9]{2}) ([0-9]{4}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}).*/\3-\2-\1 \4:\5:\6/" # in honor to king Leonidas
 DB_REGEX="(.+) (.+)" # \1 is md5, \2 is timestamp
 
 # prepare environment
@@ -199,10 +199,10 @@ do
 
             # datetime in RSS is in RFC822 format, it need to be converted to string understandable by `date`
             DATESTRING=$(echo "$DATETIME" | sed $SED_OPTS "$RFC822_TO_3339_STAGE1" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
-            UNIXTIME=$(date -d "$DATESTRING" +%s)
+            UNIXTIME=$(date -d "$DATESTRING" +%s 2>/dev/null)
 
             # if expiration set, check RSS entry pub date
-            if [ ! -z $EXPIRATION ]; then
+            if [ ! -z "$EXPIRATION" ] && [ ! -z "$UNIXTIME" ]; then
                 DIFF=$(($NOW - $UNIXTIME))
                 if [ $DIFF -gt $EXPIRATION ]; then
                     echo "Skipping $URL: expired"
