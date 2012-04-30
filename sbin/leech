@@ -74,7 +74,11 @@ GREP_OPTS="-i -E" # ignore case, extended regular expressions
 SED_OPTS="-r -e"     # enable extended regular expressions
 SED_REGEX=".* (.+)\s*\+(.+)$" # \1 is URL, \2 is datetime in RFC822
 XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
+
+# expiration and persistence options
+#
 RFC822_TO_3339_STAGE1="s/(\w{3}),\s+([0-9]{2})\s+(\w{3})\s+([0-9]{4})\s+([0-9]{2}):([0-9]{2}):([0-9]{2}).*/\4-\3-\2 \5:\6:\7/" # in honor to king Leonidas
+DB_REGEX="(.+) (.+)" # \1 is md5, \2 is timestamp
 
 # prepare environment
 #
@@ -125,8 +129,7 @@ if [ ! -z "$PERSISTENCE" ]; then
     DB="$PERSISTENCE/leech.db"
     if [ ! -f "$DB" ]; then
         echo "WARNING: Downloads DB \"$DB\" doesn't exist, creating it"
-        sqlite3 "$DB" "PRAGMA auto_vacuum=FULL"
-        sqlite3 "$DB" "CREATE TABLE log (url_md5 TEXT, timestamp INTEGER)"
+        touch "$DB"
         if [ ! $? -eq 0 ]; then
             exit 1
         fi
@@ -212,7 +215,7 @@ do
                 MD5=$(echo -n "$URL" | md5sum)
                 MD5=$(expr substr "$MD5" 1 32)
 
-                sqlite3 "$DB" "SELECT url_md5 FROM log WHERE url_md5='$MD5'" | grep "$MD5" 2>&1 >/dev/null
+                grep "$MD5" "$DB" 2>&1 >/dev/null
                 if [ $? -eq 0 ]; then
                     echo "Skipping $URL: already downloaded"
                     continue
@@ -235,7 +238,7 @@ do
 
             # if persistence enabled, make a record in DB about downloaded file
             if [ ! -z "$DB" ]; then
-                sqlite3 "$DB" "INSERT INTO log VALUES ('$MD5', strftime('%s', 'now'))"
+                echo "$MD5 $NOW" >> "$DB"
             fi
         done
     done <"$DOWNLOADS"
@@ -246,6 +249,23 @@ do
 
     # delete old records from DB, but only if expiration period is set
     if [ ! -z "$DB" ] && [ ! -z "$EXPIRATION" ]; then
-        sqlite3 "$DB" "DELETE FROM log WHERE timestamp < $(($NOW - $EXPIRATION))"
+        DB_TMP="$DB.tmp"
+        rm -f "$DB_TMP" && touch "$DB_TMP"
+
+        # write new database to tmp file
+        while read LINE
+        do
+            TIMESTAMP=$(echo "$LINE" | sed $SED_OPTS "s/$DB_REGEX/\2/")
+            if [ $(($NOW - $TIMESTAMP)) -gt $EXPIRATION ]; then
+                continue
+            fi
+
+            echo "$LINE" >>"$DB_TMP"
+        done <"$DB"
+
+        # replace db with new one
+        if [ -f "$DB_TMP" ]; then
+            mv "$DB_TMP" "$DB"
+        fi
     fi
 done <"$FOODS"
