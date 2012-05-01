@@ -40,6 +40,8 @@ if [ ! -f "$DOWNLOADS" ]; then
     exit 1
 fi
 
+# defaults
+#
 if [ -z "$DOWNLOADS_DIR" ]; then
     echo "WARNING: DOWNLOADS_DIR is not set. Assuming it's current directory."
     DOWNLOADS_DIR=.
@@ -50,7 +52,19 @@ if [ -z "$DOWNLOAD_DELAY" ]; then
 fi
 
 if [ -z "$TMP" ]; then
-    TMP=$DOWNLOADS_DIR
+    if [ ! -z "$TEMP" ]; then
+        TMP=$TEMP
+    else
+        if [ -d "/tmp" ]; then
+            TMP="/tmp"
+        else
+            TMP=$DOWNLOADS_DIR
+        fi
+    fi
+fi
+
+if [ -z "$EXPIRATION" ]; then
+    EXPIRATION=1 # day
 fi
 
 if [ -z "$PERSISTENCE" ]; then
@@ -113,13 +127,14 @@ fi
 # create persistence dir and db
 if [ ! -z "$PERSISTENCE" ]; then
     if [ ! -d "$PERSISTENCE" ]; then
+        echo "WARNING: Persistence directory \"$PERSISTENCE\" doesn't exist, creating it"
         mkdir -p "$PERSISTENCE"
         if [ ! $? -eq 0 ]; then
             exit 1
         fi
     fi
 
-    DB="$PERSISTENCE/leech.db"
+    DB="$PERSISTENCE/.leech.db"
     if [ ! -f "$DB" ]; then
         echo "WARNING: Downloads DB \"$DB\" doesn't exist, creating it"
         touch "$DB"
@@ -162,6 +177,12 @@ do
             ;;
     esac
 
+    DATA=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN")
+    if [ ! $? -eq 0 ]; then
+        rm -f "$LUNCH"
+        continue
+    fi
+
     # search lunch for patterns
     #
     while read PATTERN
@@ -176,8 +197,6 @@ do
                 continue
                 ;;
         esac
-
-        DATA=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN")
 
         # download urls if any
         #
@@ -196,8 +215,7 @@ do
 
             # if expiration set, check RSS entry pub date
             if [ ! -z "$EXPIRATION" ] && [ ! -z "$UNIXTIME" ]; then
-                DIFF=$(($NOW - $UNIXTIME))
-                if [ $DIFF -gt $EXPIRATION ]; then
+                if [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
                     echo "Skipping $URL: expired"
                     continue
                 fi
@@ -231,7 +249,7 @@ do
 
             # if persistence enabled, make a record in DB about downloaded file
             if [ ! -z "$DB" ]; then
-                echo "$MD5 $NOW" >> "$DB"
+                echo "$MD5 $NOW" >>"$DB"
             fi
         done
     done <"$DOWNLOADS"
@@ -239,26 +257,26 @@ do
     # cleanup
     #
     rm -f "$LUNCH"
-
-    # delete old records from DB, but only if expiration period is set
-    if [ ! -z "$DB" ] && [ ! -z "$EXPIRATION" ]; then
-        DB_TMP="$DB.tmp"
-        rm -f "$DB_TMP" && touch "$DB_TMP"
-
-        # write new database to tmp file
-        while read LINE
-        do
-            TIMESTAMP=$(echo "$LINE" | sed $SED_OPTS "s/$DB_REGEX/\2/")
-            if [ $(($NOW - $TIMESTAMP)) -gt $EXPIRATION ]; then
-                continue
-            fi
-
-            echo "$LINE" >>"$DB_TMP"
-        done <"$DB"
-
-        # replace db with new one
-        if [ -f "$DB_TMP" ]; then
-            mv "$DB_TMP" "$DB"
-        fi
-    fi
 done <"$FOODS"
+
+# delete old records from DB, but only if expiration period is set
+if [ ! -z "$DB" ] && [ ! -z "$EXPIRATION" ]; then
+    DB_TMP="$DB.tmp"
+    rm -f "$DB_TMP" && touch "$DB_TMP"
+
+    # write new database to tmp file
+    while read LINE
+    do
+        TIMESTAMP=$(echo "$LINE" | sed $SED_OPTS "s/$DB_REGEX/\2/")
+        if [ $(($NOW - $TIMESTAMP)) -gt $EXPIRATION ]; then
+            continue
+        fi
+
+        echo "$LINE" >>"$DB_TMP"
+    done <"$DB"
+
+    # replace db with new one
+    if [ -f "$DB_TMP" ]; then
+        mv "$DB_TMP" "$DB"
+    fi
+fi

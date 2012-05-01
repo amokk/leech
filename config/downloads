@@ -1,6 +1,8 @@
 # Filenames matching regular expressions below will be downloaded from
 # feeds you specified in foods-file. Matching is case-insensitive.
 #
+# NOTE: Put empty line at the end of the file
+#
 # Usual way to match any string is .*
 #
 # Example 1: 

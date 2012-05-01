@@ -19,7 +19,7 @@ XSL_TEMPLATE="$PARENT_DIR/share/leech/leech.xsl"
 #PERSISTENCE="/tmp"
 
 # leech won't download files older than that
-EXPIRATION=1 # day(s)
+#EXPIRATION=1 # day(s)
 
 # Download options
 #
