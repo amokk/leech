@@ -135,13 +135,6 @@ if [ ! -z "$PERSISTENCE" ]; then
     fi
 
     DB="$PERSISTENCE/.leech.db"
-    if [ ! -f "$DB" ]; then
-        echo "WARNING: Downloads DB \"$DB\" doesn't exist, creating it"
-        touch "$DB"
-        if [ ! $? -eq 0 ]; then
-            exit 1
-        fi
-    fi
 fi
 
 # downloading
@@ -177,12 +170,6 @@ do
             ;;
     esac
 
-    DATA=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH")
-    if [ ! $? -eq 0 ]; then
-        rm -f "$LUNCH"
-        continue
-    fi
-
     # search lunch for patterns
     #
     while read PATTERN
@@ -200,37 +187,26 @@ do
 
         # download urls if any
         #
-        echo "$DATA" | grep $GREP_OPTS "$PATTERN" | while read STR
+        xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN" | while read STR
         do
-            if [ -z "$STR" ]; then
-                continue
-            fi
-
             URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
-            DATETIME=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
 
             # datetime in RSS is in RFC822 format, it need to be converted to string understandable by `date`
-            DATESTRING=$(echo "$DATETIME" | sed $SED_OPTS "$RFC822_TO_3339_STAGE1" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
+            DATESTRING=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/" | sed $SED_OPTS "$RFC822_TO_3339_STAGE1" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
             UNIXTIME=$(date -d "$DATESTRING" +%s 2>/dev/null)
 
             # if expiration set, check RSS entry pub date
-            if [ ! -z "$EXPIRATION" ] && [ ! -z "$UNIXTIME" ]; then
-                if [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
-                    echo "Skipping $URL: expired"
-                    continue
-                fi
+            if [ ! -z "$EXPIRATION" ] && [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
+                echo "Skipping $URL: expired"
+                continue
             fi
 
-            # if persistence enabled - check md5 of URL for duplicates
-            if [ ! -z "$DB" ]; then
-                MD5=$(echo -n "$URL" | md5sum)
-                MD5=$(expr substr "$MD5" 1 32)
+            MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32)
 
-                grep "$MD5" "$DB" 2>&1 >/dev/null
-                if [ $? -eq 0 ]; then
-                    echo "Skipping $URL: already downloaded"
-                    continue
-                fi
+            # if persistence enabled - check md5 of URL for duplicates
+            if [ -f "$DB" ] && [ ! -z "$(grep "$MD5" "$DB")" ]; then
+                echo "Skipping $URL: already downloaded"
+                continue
             fi
 
             echo -n "Downloading file: $URL... "
@@ -259,8 +235,10 @@ do
     rm -f "$LUNCH"
 done <"$FOODS"
 
+# database cleanup
 # delete old records from DB, but only if expiration period is set
-if [ ! -z "$DB" ] && [ ! -z "$EXPIRATION" ]; then
+#
+if [ ! -z "$DB" ] && [ ! -z "$EXPIRATION" ] && [ -f "$DB" ]; then
     DB_TMP="$DB.tmp"
     rm -f "$DB_TMP" && touch "$DB_TMP"
 
