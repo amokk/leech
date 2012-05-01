@@ -177,7 +177,7 @@ do
             ;;
     esac
 
-    DATA=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN")
+    DATA=$(xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH")
     if [ ! $? -eq 0 ]; then
         rm -f "$LUNCH"
         continue
@@ -200,7 +200,7 @@ do
 
         # download urls if any
         #
-        echo "$DATA" | while read STR
+        echo "$DATA" | grep $GREP_OPTS "$PATTERN" | while read STR
         do
             if [ -z "$STR" ]; then
                 continue
