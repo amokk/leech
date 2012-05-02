@@ -23,4 +23,4 @@ XSL_TEMPLATE="$PARENT_DIR/share/leech/leech.xsl"
 
 # Download options
 #
-DOWNLOAD_DELAY=5 # second(s)
+#DOWNLOAD_DELAY=5 # second(s)
