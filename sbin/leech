@@ -86,7 +86,7 @@ WGET_DOWNLOADS_OPTS="-q --content-disposition -c -i -" # wget options for downlo
 #
 GREP_OPTS="-i -E" # ignore case, extended regular expressions
 SED_OPTS="-r -e"     # enable extended regular expressions
-SED_REGEX=".* (.+)\s*\+(.+)$" # \1 is URL, \2 is datetime in RFC822
+SED_REGEX=".* (.+)\s*\"(.+)\"$" # \1 is URL, \2 is datetime in RFC822
 XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
 
 # expiration and persistence options
@@ -191,6 +191,10 @@ do
         do
             URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
 
+            if [ -z "$URL" ]; then
+                continue
+            fi
+
             # datetime in RSS is in RFC822 format, it need to be converted to string understandable by `date`
             DATESTRING=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/" | sed $SED_OPTS "$RFC822_TO_3339_STAGE1" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
             UNIXTIME=$(date -d "$DATESTRING" +%s 2>/dev/null)
@@ -209,10 +213,17 @@ do
                 continue
             fi
 
-            echo -n "Downloading file: $URL... "
+            echo -n "Downloading: $URL... "
 
             sleep $DOWNLOAD_DELAY
-            echo "$URL" | wget -P "$DOWNLOADS_DIR" $WGET_DOWNLOADS_OPTS
+
+            ADDITIONAL_WGET_OPTS=""
+            if [ ! -z "$FORCE_SUFFIX" ]; then
+                FILENAME="$MD5$FORCE_SUFFIX"
+                ADDITIONAL_WGET_OPTS="-O $FILENAME"
+            fi
+
+            echo "$URL" | wget -P "$DOWNLOADS_DIR" $ADDITIONAL_WGET_OPTS $WGET_DOWNLOADS_OPTS
 
             case $? in
                 0)
