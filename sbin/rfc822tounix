@@ -3,15 +3,15 @@
 # Author: Aleksey Tulinov <aleksey.tulinov@gmail.com>
 
 usage() {
-	echo "RFC822 timestamp to unixtime (in UTC) converter"
-	echo "Usage: $0 \"<RFC822DATETIME>\""
+    echo "RFC822 timestamp to unixtime (in UTC) converter"
+    echo "Usage: $0 \"<RFC822DATETIME>\""
 }
 
 # check arguments count
 #
 if [ $# -lt 1 ]; then
 usage
-	exit 1
+    exit 1
 fi
 
 SED_OPTS="-r -e" # enable extended regular expressions in sed
@@ -21,8 +21,8 @@ NUMBER_CLEANUP="s/0?(.*)/\1/" # remove leading 0 from number (because "08" is oc
 
 echo $1 | grep $GREP_OPTS "$RFC822" >/dev/null
 if [ ! $? -eq 0 ]; then
-	echo "ERROR: Given string doesn't appear to be RFC822 datetime"
-	exit 1
+    echo "ERROR: Given string doesn't appear to be RFC822 datetime"
+    exit 1
 fi
 
 # get initial unixtime from RFC822 timestamp

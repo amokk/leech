@@ -69,7 +69,7 @@ if [ -z "$EXPIRATION" ]; then
 fi
 
 if [ $EXPIRATION -lt 0 ]; then
-	echo "WARNING: EXPIRATION can't be less than 1 day, otherwise $(basename $0) won't work properly. Fixed for you."
+    echo "WARNING: EXPIRATION can't be less than 1 day, otherwise $(basename $0) won't work properly. Fixed for you."
 fi
 
 if [ -z "$PERSISTENCE" ]; then
@@ -200,11 +200,11 @@ do
             fi
 
             # timestamp in RSS is in RFC822 format, it need to be converted to string understandable by `date`
-			TIMESTAMP=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
+            TIMESTAMP=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
             UNIXTIME=$($RFC822TOUNIX "$TIMESTAMP")
-			if [ ! $? -eq 0 ]; then
-				echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
-			fi
+            if [ ! $? -eq 0 ]; then
+                echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
+            fi
 
             # if expiration set, check RSS entry pub date
             if [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
