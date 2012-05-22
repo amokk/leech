@@ -7,6 +7,7 @@ usage() {
     echo "Or you could omit DOWNLOADS_DIR to download files to current directory."
 }
 
+RFC822TOUNIX="$(dirname $0)/rfc822tounix"
 CONFIG="$CONFIG_DIR/default"
 
 if [ ! -f $CONFIG ]; then
@@ -67,6 +68,10 @@ if [ -z "$EXPIRATION" ]; then
     EXPIRATION=1 # day
 fi
 
+if [ $EXPIRATION -lt 0 ]; then
+	echo "WARNING: EXPIRATION can't be less than 1 day, otherwise $(basename $0) won't work properly. Fixed for you."
+fi
+
 if [ -z "$PERSISTENCE" ]; then
     PERSISTENCE=$DOWNLOADS_DIR
 fi
@@ -89,9 +94,8 @@ SED_OPTS="-r -e"     # enable extended regular expressions
 SED_REGEX=".* (.+)\s*\"(.+)\"$" # \1 is URL, \2 is datetime in RFC822
 XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
 
-# expiration and persistence options
+# persistence options
 #
-RFC822_TO_3339_STAGE1="s/[a-zA-Z]{3}, ([0-9]{2}) ([a-zA-Z]{3}|[0-9]{2}) ([0-9]{4}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}).*/\3-\2-\1 \4:\5:\6/" # in honor to king Leonidas
 DB_REGEX="(.+) (.+)" # \1 is md5, \2 is timestamp
 
 # prepare environment
@@ -121,7 +125,7 @@ fi
 # set expiration in seconds and current time
 if [ ! -z "$EXPIRATION" ]; then
     EXPIRATION=$(($EXPIRATION * 86400)) # days * seconds in a day
-    NOW=$(date +%s)
+    NOW=$(date -u +%s)
 fi
 
 # create persistence dir and db
@@ -195,12 +199,15 @@ do
                 continue
             fi
 
-            # datetime in RSS is in RFC822 format, it need to be converted to string understandable by `date`
-            DATESTRING=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/" | sed $SED_OPTS "$RFC822_TO_3339_STAGE1" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
-            UNIXTIME=$(date -d "$DATESTRING" +%s 2>/dev/null)
+            # timestamp in RSS is in RFC822 format, it need to be converted to string understandable by `date`
+			TIMESTAMP=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
+            UNIXTIME=$($RFC822TOUNIX "$TIMESTAMP")
+			if [ ! $? -eq 0 ]; then
+				echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
+			fi
 
             # if expiration set, check RSS entry pub date
-            if [ ! -z "$EXPIRATION" ] && [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
+            if [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
                 echo "Skipping $URL: expired"
                 continue
             fi
@@ -246,10 +253,9 @@ do
     rm -f "$LUNCH"
 done <"$FOODS"
 
-# database cleanup
-# delete old records from DB, but only if expiration period is set
+# delete old records from DB
 #
-if [ ! -z "$DB" ] && [ ! -z "$EXPIRATION" ] && [ -f "$DB" ]; then
+if [ ! -z "$DB" ] && [ -f "$DB" ]; then
     DB_TMP="$DB.tmp"
     rm -f "$DB_TMP" && touch "$DB_TMP"
 

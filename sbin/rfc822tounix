@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Author: Aleksey Tulinov <aleksey.tulinov@gmail.com>
+
+usage() {
+	echo "RFC822 timestamp to unixtime (in UTC) converter"
+	echo "Usage: $0 \"<RFC822DATETIME>\""
+}
+
+# check arguments count
+#
+if [ $# -lt 1 ]; then
+usage
+	exit 1
+fi
+
+SED_OPTS="-r -e" # enable extended regular expressions in sed
+GREP_OPTS="-r -E" # enable extended regular expressions in grep
+RFC822="[a-zA-Z]{3}, ([0-9]{2}|[0-9]) ([a-zA-Z]{3}|[0-9]{2}) ([0-9]{4}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}) (([\+\-][0-9]{4})|UT|UTC|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT|A|M|N|Y).*" # in honor to king Leonidas
+NUMBER_CLEANUP="s/0?(.*)/\1/" # remove leading 0 from number (because "08" is octal)
+
+echo $1 | grep $GREP_OPTS "$RFC822" >/dev/null
+if [ ! $? -eq 0 ]; then
+	echo "ERROR: Given string doesn't appear to be RFC822 datetime"
+	exit 1
+fi
+
+# get initial unixtime from RFC822 timestamp
+# if month is specified as Apr, replace it with 04, et cetera
+ISODATE=$(echo "$1" | sed $SED_OPTS "s/$RFC822/\3-\2-\1 \4:\5:\6/" | sed -e "s/Jan/01/" -e "s/Feb/02/" -e "s/Mar/03/" -e "s/Apr/04/" -e "s/May/05/" -e "s/Jun/06/" -e "s/Jul/07/" -e "s/Aug/08/" -e "s/Sep/09/" -e "s/Oct/10/" -e "s/Nov/11/" -e "s/Dec/12/")
+UNIXTIME=$(date -u -d "$ISODATE" +%s)
+
+# get timezone from timestamp (+0000)
+# also replace PST with -0800, et cetera
+TIMEZONE=$(echo "$1" | sed $SED_OPTS "s/$RFC822/\7/" | sed -e "s/UT/+0000/" -e "s/UTC/+0000/" -e "s/GMT/+0000/" -e "s/EST/-0500/" -e "s/EDT/-0400/" -e "s/CST/-0600/" -e "s/CDT/-0500/" -e "s/MST/-0700/" -e "s/MDT/-0600/" -e "s/PST/-0800/" -e "s/PDT/-0700/" -e "s/A/-0100/" -e "s/M/-1200/" -e "s/N/+0100/" -e "s/Y/+1200/")
+
+# parse timezone value including sign of operation
+TZ_SIGN=$(expr substr "$TIMEZONE" 1 1)
+TZ_HOURS=$(expr substr "$TIMEZONE" 2 2 | sed $SED_OPTS "$NUMBER_CLEANUP")
+TZ_MINUTES=$(expr substr "$TIMEZONE" 4 2 | sed $SED_OPTS "$NUMBER_CLEANUP")
+
+# time shift in seconds
+# timestamp in local time, means -0600 should actually add 6 hours to get UTC
+TIMESHIFT=$((-($TZ_SIGN($TZ_HOURS * 60 * 60 + $TZ_MINUTES * 60))))
+
+# finally, apply timezone to base time
+UNIXTIME=$(($UNIXTIME + $TIMESHIFT))
+echo $UNIXTIME
