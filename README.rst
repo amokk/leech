@@ -2,8 +2,7 @@
 WHAT'S THIS
 -----------
 
-It will download torrent files for you if you give it RSS-feeds of your
-favorite trackers.
+It will download torrent files for you if you give it RSS-feeds of your favorite trackers.
 
 How it works::
 
@@ -16,14 +15,12 @@ Torrent clients supporting watching over directory:
 * rtorrent
 * probably some else i don't know about
 
-leech is implemented in sh + wget + xsltproc + grep + sed + wget again. For
-periodic checks you might want to use cron. E.g.::
+leech is implemented in sh + wget + xsltproc + grep + sed + wget again. For periodic checks you might want to use cron. E.g.::
 
     # crontab -l
     */30 * * * * CONFIG_DIR=/etc/leech DOWNLOADS_DIR=/mnt/usb/store/schedule leech
 
-Will run leech every 30 minutes, checking feeds and downloading all matched
-torrent files.
+Will run leech every 30 minutes, checking feeds and downloading all matched torrent files.
 
 
 WHY IT'S GOOD
@@ -46,15 +43,16 @@ to ``/mnt/downloads/schedule``.
 
 DOWNLOADS_DIR might be omitted to download files to current directory.
 
-You might also want to use ``sbin/leech-match-test`` to test if expressions in
-config/downloads match filenames you need.
+You might also want to use ``sbin/leech-match-test`` to test if expressions
+in config/downloads match filenames you need.
 
 
 KNOWN ISSUES
 ------------
 
-* You need normal wget to make it work. Default OpenWRT's wget rippoff
-won't do.
+* You need normal wget to make it work. Default OpenWRT's wget rippoff won't do.
+* You need to put empty line at the end of configuration files
+* OpenWrt's leech only supports Unicode encodings - see TROUBLESHOOTING for workaround
 
 
 WHAT'S INSIDE
@@ -78,8 +76,7 @@ It should work out of the box.
 Now you should be able to run ``CONFIG_DIR=config ./leech`` and see it
 downloading feeds (to /tmp) and files (if any, to current directory).
 
-* `crontab -e` and add cron job as described above, with correct paths
-to CONFIG_DIR, DOWNLOADS_DIR and correct path to main script.
+* `crontab -e` and add cron job as described above, with correct paths to CONFIG_DIR, DOWNLOADS_DIR and correct path to main script.
 
 
 INSTALL AS SUPERUSER
@@ -99,7 +96,6 @@ Configuration files are under /etc/leech.
 
 * edit ``/etc/leech/foods`` and add RSS feeds
 * edit ``/etc/leech/downloads`` and add DL rules
-* add cron job as described above
 * ``crontab -e`` and add cron job as described above.
 * (optional) don't forget to enable cron (if it's not): ``/etc/init.d/cron enable`` for OpenWRT
 
@@ -124,9 +120,14 @@ TROUBLESHOOTING
 ---------------
 
 If you think something is wrong, or just want to make sure if everything is OK,
-you could always run leech in manual mode and observe its output.
+you could always run leech in manual mode and observe its output. See above, how to do so.
 
-See above, in (yours type) installation process how to do so.
+leech prints error about parsing of feeds in some outdated encoding, like cp1251
+===
+Try to re-encode your feed with web-service like http://pipes.yahoo.com. Later will give
+you UTF-8 encoded feed. If after that you have any troubles with files (filenames)
+downloaded by leech, you might use FORCE_SUFFIX option in ``defaults`` to set filenames
+in the predictable pattern.
 
 
 UNDER THE HOOD
@@ -134,6 +135,11 @@ UNDER THE HOOD
 
 Script will create temporary file in $TMP (/tmp by default): ``$TMP/leech.lunch``
 - contains downloaded feed.
+
+It will also create ``.leech.db`` with list of alredy downloaded files in
+$PERSISTENCE or in $DOWNLOADS_DIR if $PERSISTENCE is not set (by default). This
+file contains MD5 sum of downloaded URLs and time when it happened. DB is
+periodically cleared, old (not needed) records are deleted.
 
 Files matched ``config/downloads`` rules goes directly to DOWNLOADS_DIR. In
 case of incomplete file retrieval, wget will resume download.
