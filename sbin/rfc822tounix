@@ -10,7 +10,7 @@ usage() {
 # check arguments count
 #
 if [ $# -lt 1 ]; then
-usage
+    usage
     exit 1
 fi
 

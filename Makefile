@@ -1,7 +1,8 @@
-VERSION=0.1
+VERSION=0.2
 BUILD=1
 TARGET=sbin/leech
 MATCH_TEST_TARGET=sbin/leech-match-test
+RFC822_TO_UNIX_TARGET=sbin/rfc822tounix
 XSL=share/leech/leech.xsl
 CONFIG_FILES=config/default config/foods config/downloads
 BUILD_DIR=pkg_build
@@ -12,6 +13,8 @@ default: executable ipk deb
 
 executable:
 	chmod +x "${TARGET}"
+	chmod +x "${MATCH_TEST_TARGET}"
+	chmod +x "${RFC822_TO_UNIX_TARGET}"
 
 clean:
 	rm -fr "${BUILD_DIR}"
@@ -31,10 +34,11 @@ deb:
 	mkdir -p "${BUILD_DIR}/usr/share/leech"
 	
 	cp ${CONFIG_FILES} "${BUILD_DIR}/etc/leech/"
-	cp "${TARGET}" "${MATCH_TEST_TARGET}" "${BUILD_DIR}/usr/sbin/"
+	cp "${TARGET}" "${MATCH_TEST_TARGET}" "${RFC822_TO_UNIX_TARGET}" "${BUILD_DIR}/usr/sbin/"
 	cp "${XSL}" "${BUILD_DIR}/usr/share/leech/"
 	chmod +x "${BUILD_DIR}/usr/${TARGET}"
 	chmod +x "${BUILD_DIR}/usr/${MATCH_TEST_TARGET}"
+	chmod +x "${BUILD_DIR}/usr/${RFC822_TO_UNIX_TARGET}"
 	
 	# deb
 	fakeroot dpkg -b "${BUILD_DIR}" "${DEB_TARGET}"
@@ -54,10 +58,11 @@ ipk:
 	# data.tar.gz
 	mkdir -p "${BUILD_DIR}/usr/sbin" "${BUILD_DIR}/usr/share/leech" "${BUILD_DIR}/etc/leech"
 	cp ${CONFIG_FILES} "${BUILD_DIR}/etc/leech/"
-	cp "${TARGET}" "${MATCH_TEST_TARGET}" "${BUILD_DIR}/usr/sbin/"
+	cp "${TARGET}" "${MATCH_TEST_TARGET}" "${RFC822_TO_UNIX_TARGET}" "${BUILD_DIR}/usr/sbin/"
 	cp "${XSL}" "${BUILD_DIR}/usr/share/leech/"
 	chmod +x "${BUILD_DIR}/usr/${TARGET}"
 	chmod +x "${BUILD_DIR}/usr/${MATCH_TEST_TARGET}"
+	chmod +x "${BUILD_DIR}/usr/${RFC822_TO_UNIX_TARGET}"
 	fakeroot tar zcvf "${BUILD_DIR}/data.tar.gz" -C "${BUILD_DIR}" usr/ etc/
 	
 	# leech.ipk
