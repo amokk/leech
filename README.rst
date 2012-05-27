@@ -123,12 +123,18 @@ If you think something is wrong, or just want to make sure if everything is OK,
 you could always run leech in manual mode and observe its output. See above, how to do so.
 
 leech prints error about parsing of feeds in some outdated encoding, like cp1251
-===
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Try to re-encode your feed with web-service like http://pipes.yahoo.com. Later will give
 you UTF-8 encoded feed. If after that you have any troubles with files (filenames)
 downloaded by leech, you might use FORCE_SUFFIX option in ``defaults`` to set filenames
 in the predictable pattern.
 
+You might also e-mail webmaster of the feed and kindly remind him current date. Here is
+a link_ to United States Naval Observatory Time Service Department page with current time
+to prove that 1995 is already over.
+
+.. _link: http://tycho.usno.navy.mil/simpletime.html
 
 UNDER THE HOOD
 --------------
