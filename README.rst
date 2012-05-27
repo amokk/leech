@@ -52,7 +52,9 @@ KNOWN ISSUES
 
 * You need normal wget to make it work. Default OpenWRT's wget rippoff won't do.
 * You need to put empty line at the end of configuration files
-* OpenWrt's leech only supports Unicode encodings - see TROUBLESHOOTING for workaround
+* OpenWrt's leech only supports Unicode encodings - see TROUBLESHOOTING_ for workaround
+
+.. _TROUBLESHOOTING:
 
 
 WHAT'S INSIDE
