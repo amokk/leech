@@ -1,0 +1,8 @@
+0.2
+
+[+] leech won't download files twice (default:PERSISTENCY=)
+[+] leech won't download files older than specified (default:EXPIRATION=)
+[+] you can force leech to append specific extension to downloaded files (default:FORCE_SUFFIX=)
+
+[-] fixed bug with backslashes in downloads
+    was: \\[netbook\\], now: \[netbook\]
