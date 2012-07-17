@@ -204,6 +204,7 @@ do
             UNIXTIME=$($RFC822TOUNIX "$TIMESTAMP")
             if [ ! $? -eq 0 ]; then
                 echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
+				UNIXTIME=""
             fi
 
             # if expiration set, check RSS entry pub date
