@@ -16,7 +16,7 @@ fi
 
 SED_OPTS="-r -e" # enable extended regular expressions in sed
 GREP_OPTS="-r -E" # enable extended regular expressions in grep
-RFC822="[a-zA-Z]{3}, ([0-9]{2}|[0-9]) ([a-zA-Z]{3}|[0-9]{2}) ([0-9]{4}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}) (([\+\-][0-9]{4})|UT|UTC|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT|A|M|N|Y).*" # in honor to king Leonidas
+RFC822="[a-zA-Z]{3}, ([0-9]{2}|[0-9]) ([a-zA-Z]{3}|[0-9]{2}) ([0-9]{4}) ([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2}) (([\+\-][0-9]{4})|UT|UTC|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT).*" # in honor to king Leonidas
 NUMBER_CLEANUP="s/0?(.*)/\1/" # remove leading 0 from number (because "08" is octal)
 
 echo $1 | grep $GREP_OPTS "$RFC822" >/dev/null
