@@ -28,6 +28,9 @@ XSL_TEMPLATE="$PARENT_DIR/share/leech/leech.xsl"
 # leech won't download files older than that
 #EXPIRATION=1 # day(s)
 
+# how long to keep downloads history
+#HISTORY=14 # day(s)
+
 # Download options
 #
 #DOWNLOAD_DELAY=5 # second(s)

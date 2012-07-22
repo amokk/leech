@@ -70,10 +70,20 @@ fi
 
 if [ $EXPIRATION -lt 0 ]; then
     echo "WARNING: EXPIRATION can't be less than 1 day, otherwise $(basename $0) won't work properly. Fixed for you."
+	EXPIRATION=1 # day
 fi
 
 if [ -z "$PERSISTENCE" ]; then
     PERSISTENCE=$DOWNLOADS_DIR
+fi
+
+if [ -z "$HISTORY" ]; then
+    HISTORY=14 # day
+fi
+
+if [ $HISTORY -lt 0 ]; then
+    echo "WARNING: HISTORY can't be less than 1 day, otherwise $(basename $0) won't work properly. Fixed for you."
+	HISTORY=1 # day
 fi
 
 # temporary file with RSS-feed
@@ -122,10 +132,17 @@ if [ ! -z "$DOWNLOADS_DIR" ] && [ ! -d "$DOWNLOADS_DIR" ]; then
     fi
 fi
 
-# set expiration in seconds and current time
+# current time
+NOW=$(date -u +%s)
+
+# set expiration in seconds
 if [ ! -z "$EXPIRATION" ]; then
     EXPIRATION=$(($EXPIRATION * 86400)) # days * seconds in a day
-    NOW=$(date -u +%s)
+fi
+
+# set history in seconds
+if [ ! -z "$HISTORY" ]; then
+    HISTORY=$(($HISTORY * 86400)) # days * seconds in a day
 fi
 
 # create persistence dir and db
@@ -264,7 +281,7 @@ if [ ! -z "$DB" ] && [ -f "$DB" ]; then
     while read LINE
     do
         TIMESTAMP=$(echo "$LINE" | sed $SED_OPTS "s/$DB_REGEX/\2/")
-        if [ $(($NOW - $TIMESTAMP)) -gt $EXPIRATION ]; then
+        if [ $(($NOW - $TIMESTAMP)) -gt $HISTORY ]; then
             continue
         fi
 
