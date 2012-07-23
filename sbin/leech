@@ -91,8 +91,8 @@ LUNCH="$TMP/leech.lunch.$$"
 
 # wget options
 #
-WGET_LUNCH_OPTS="-q" # wget options for downloading lunch
-WGET_DOWNLOADS_OPTS="-q --content-disposition -c -i -" # wget options for downloading files
+WGET_LUNCH_OPTS="-q -T $TIMEOUT -t $RETRY" # wget options for downloading lunch
+WGET_DOWNLOADS_OPTS="-q -T $TIMEOUT -t $RETRY --content-disposition -c -i -" # wget options for downloading files
 # --content-disposition to correctly rip torrent's filename from script like torrents.php?id=xyz
 # -c for not re-downloading torrents
 # -i - : url (passed through stdin as output of xsltproc | grep | sed)

@@ -34,3 +34,10 @@ XSL_TEMPLATE="$PARENT_DIR/share/leech/leech.xsl"
 # Download options
 #
 #DOWNLOAD_DELAY=5 # second(s)
+
+# Timout per download attempt (Foods & Lunch)
+TIMEOUT=30 # second(s)
+
+# Retries per failed download (Foods & Lunch)
+RETRY=1 # attempts
+
