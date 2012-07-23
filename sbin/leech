@@ -56,11 +56,7 @@ if [ -z "$TMP" ]; then
     if [ ! -z "$TEMP" ]; then
         TMP=$TEMP
     else
-        if [ -d "/tmp" ]; then
-            TMP="/tmp"
-        else
-            TMP=$DOWNLOADS_DIR
-        fi
+        TMP=$DOWNLOADS_DIR
     fi
 fi
 
