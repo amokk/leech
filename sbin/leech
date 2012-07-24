@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Author: Aleksey Tulinov <aleksey.tulinov@gmail.com>
+# Contributor: SumolX <https://github.com/SumolX>
 
 usage() {
     echo "Usage: CONFIG_DIR=\"<DIRECTORY>\" DOWNLOADS_DIR=\"<DIRECTORY>\" $0"
