@@ -1,3 +1,14 @@
+0.3
+
+[+] new option HISTORY that will keep track of .leech.db length instead of EXPIRATION
+[+] new option TIMEOUT for interrupting stuck downloads
+[+] new option RETRY to retry failed downloads
+
+[-] fixed handling of TMP - will default to DOWNLOADS_DIR as described
+[-] fixed bug with leech.lunch left after failed feed download
+[-] fixed bug with failed download being stored in .leech.db
+[-] correct handling of pubDate parsing error
+
 0.2
 
 [+] leech won't download files twice (default:PERSISTENCY=)

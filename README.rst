@@ -7,6 +7,7 @@ It will download torrent files for you if you give it RSS-feeds of your favorite
 How it works::
 
     RSS -> leech -> torrent files -> directory ------+
+                                                     |
     downloaded files <- torrent client <- watchdog <-+
 
 Torrent clients supporting watching over directory:
@@ -53,8 +54,10 @@ KNOWN ISSUES
 * You need normal wget to make it work. Default OpenWRT's wget rippoff won't do.
 * You need to put empty line at the end of configuration files
 * OpenWrt's leech only supports Unicode encodings - see TROUBLESHOOTING_ for workaround
+* It only support RFC822_ dates in RSS - see TROUBLESHOOTING_ for workaround
 
 .. _TROUBLESHOOTING:
+.. _RFC822: http://www.ietf.org/rfc/rfc0822.txt
 
 
 WHAT'S INSIDE
@@ -85,8 +88,7 @@ INSTALL AS SUPERUSER
 --------------------
 
 Check "Downloads" section, there should be package(s) you need. In case they're
-not there, please email me about this problem (aleksey dot tulinov at gmail dot
-com).
+not there, please email me about this problem (aleksey.tulinov@gmail.com).
 
 Install process does everything you need for normal use (except cron and
 downloads configuration). If you want to check if it's running correctly:
@@ -100,22 +102,6 @@ Configuration files are under /etc/leech.
 * edit ``/etc/leech/downloads`` and add DL rules
 * ``crontab -e`` and add cron job as described above.
 * (optional) don't forget to enable cron (if it's not): ``/etc/init.d/cron enable`` for OpenWRT
-
-
-MANUAL INSTALLATION
--------------------
-
-Here is short description of installation process:
-
-* install wget, grep, sed and xsltproc
-* link ``sbin/leech`` -> ``/usr/sbin/leech``
-* link ``share/leech/leech.xsl`` -> ``/usr/share/leech/leech.xsl``
-* link ``config/`` -> ``/etc/leech/``
-* ``crontab -e`` and add cron job as described above.
-* (optional) don't forget to enable cron (if it's not)
-
-After steps above, you should be able to run ``CONFIG_DIR=/etc/leech leech`` in
-shell and see leech downloading feeds and files.
 
 
 TROUBLESHOOTING
@@ -138,13 +124,30 @@ to prove that 1995 is already over.
 
 .. _link: http://tycho.usno.navy.mil/simpletime.html
 
+leech prints timestamp parsing error
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ``WARNING: RSS timestamp (2012-07-17 04:34:08) can't be parsed correctly``
+
+Your feed is broken and doesn't follow standard. I don't really want to support
+broken feeds, but leech will still work if you set HISTORY value in ``default``
+to value greater than oldest record in broken feed.
+
+For instance, oldest record in feed is two weeks old - set HISTORY to 15 days.
+
+With HISTORY set correctly, leech won't download torrents twice. You could also
+send webmaster this link_. Hope this helps.
+
+.. _link: http://cyber.law.harvard.edu/rss/rss.html
+
+
 UNDER THE HOOD
 --------------
 
 Script will create temporary file in $TMP (/tmp by default): ``$TMP/leech.lunch``
 - contains downloaded feed.
 
-It will also create ``.leech.db`` with list of alredy downloaded files in
+It will also create ``.leech.db`` with list of already downloaded files in
 $PERSISTENCE or in $DOWNLOADS_DIR if $PERSISTENCE is not set (by default). This
 file contains MD5 sum of downloaded URLs and time when it happened. DB is
 periodically cleared, old (not needed) records are deleted.
