@@ -136,9 +136,9 @@ to value greater than oldest record in broken feed.
 For instance, oldest record in feed is two weeks old - set HISTORY to 15 days.
 
 With HISTORY set correctly, leech won't download torrents twice. You could also
-send webmaster this link_. Hope this helps.
+send webmaster this link to RSS specification_. Hope this helps.
 
-.. _link: http://cyber.law.harvard.edu/rss/rss.html
+.. _specification: http://cyber.law.harvard.edu/rss/rss.html
 
 
 UNDER THE HOOD
