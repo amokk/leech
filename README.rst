@@ -56,8 +56,8 @@ KNOWN ISSUES
 * OpenWrt's leech only supports Unicode encodings - see TROUBLESHOOTING_ for workaround
 * It only support RFC822_ dates in RSS - see TROUBLESHOOTING_ for workaround
 
-.. _TROUBLESHOOTING:
 .. _RFC822: http://www.ietf.org/rfc/rfc0822.txt
+.. _TROUBLESHOOTING:
 
 
 WHAT'S INSIDE
@@ -130,12 +130,12 @@ leech prints timestamp parsing error
     ``WARNING: RSS timestamp (2012-07-17 04:34:08) can't be parsed correctly``
 
 Your feed is broken and doesn't follow standard. I don't really want to support
-broken feeds, but leech will still work if you set HISTORY value in ``default``
+broken feeds, but leech will still work if you set $HISTORY value in ``default``
 to value greater than oldest record in broken feed.
 
-For instance, oldest record in feed is two weeks old - set HISTORY to 15 days.
+For instance, oldest record in feed is two weeks old - set $HISTORY to 15 days.
 
-With HISTORY set correctly, leech won't download torrents twice. You could also
+With $HISTORY set correctly, leech won't download torrents twice. You could also
 send webmaster this link to RSS specification_. Hope this helps.
 
 .. _specification: http://cyber.law.harvard.edu/rss/rss.html
@@ -144,8 +144,8 @@ send webmaster this link to RSS specification_. Hope this helps.
 UNDER THE HOOD
 --------------
 
-Script will create temporary file in $TMP (/tmp by default): ``$TMP/leech.lunch``
-- contains downloaded feed.
+Script will create temporary file in $TMP ($DOWNLOADS_DIR by default):
+``$TMP/leech.lunch`` - contains downloaded feed.
 
 It will also create ``.leech.db`` with list of already downloaded files in
 $PERSISTENCE or in $DOWNLOADS_DIR if $PERSISTENCE is not set (by default). This
