@@ -225,9 +225,12 @@ do
             MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
 
             # if persistence enabled - check md5 of URL for duplicates
-            if [ -f "$DB" ] && [ ! -z "$(grep "$MD5" "$DB")" ]; then
-                echo "Skipping $URL: already downloaded"
-                continue
+            if [ -f "$DB" ]; then
+                grep "$MD5" "$DB" 2>&1 >/dev/null
+                if [ $? -eq 0 ]; then
+                    echo "Skipping $URL: already downloaded"
+                    continue
+                fi
             fi
 
             echo -n "Downloading: $URL... "
