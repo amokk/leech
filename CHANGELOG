@@ -1,3 +1,8 @@
+0.4
+
+[*] fixed check for file being present in .leech.db in it's not created yet
+[*] fixed packaging issues: version wasn't raised in control files, migrated to ipk-build
+
 0.3
 
 [+] new option HISTORY that will keep track of .leech.db length instead of EXPIRATION

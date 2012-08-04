@@ -1,4 +1,4 @@
-VERSION=0.3
+VERSION=0.4
 BUILD=1
 TARGET=sbin/leech
 MATCH_TEST_TARGET=sbin/leech-match-test
@@ -51,9 +51,8 @@ ipk:
 	echo "2.0" > "${BUILD_DIR}/debian-binary"
 	
 	# control.tar.gz
-	mkdir -p "${BUILD_DIR}/IPKG"
-	cp build/ipkg/control build/ipkg/conffiles "${BUILD_DIR}/IPKG/"
-	fakeroot tar zcvf "${BUILD_DIR}/control.tar.gz" -C "${BUILD_DIR}/IPKG" control conffiles
+	mkdir -p "${BUILD_DIR}/CONTROL"
+	cp build/ipkg/control build/ipkg/conffiles "${BUILD_DIR}/CONTROL/"
 	
 	# data.tar.gz
 	mkdir -p "${BUILD_DIR}/usr/sbin" "${BUILD_DIR}/usr/share/leech" "${BUILD_DIR}/etc/leech"
@@ -63,10 +62,9 @@ ipk:
 	chmod +x "${BUILD_DIR}/usr/${TARGET}"
 	chmod +x "${BUILD_DIR}/usr/${MATCH_TEST_TARGET}"
 	chmod +x "${BUILD_DIR}/usr/${RFC822_TO_UNIX_TARGET}"
-	fakeroot tar zcvf "${BUILD_DIR}/data.tar.gz" -C "${BUILD_DIR}" usr/ etc/
 	
 	# leech.ipk
-	fakeroot tar zcvf "${IPK_TARGET}" -C "${BUILD_DIR}" debian-binary control.tar.gz data.tar.gz
+	fakeroot build/ipkg-build "${BUILD_DIR}"
 	
 	# cleanup
 	rm -fr "${BUILD_DIR}"

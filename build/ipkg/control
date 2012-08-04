@@ -3,8 +3,8 @@ Source: https://github.com/alekseyt/leech
 Maintainer: Aleksey Tulinov <aleksey.tulinov@gmail.com>
 Section: net
 Priority: Optional
-Version: 0.2-1
+Version: 0.4-1
 Architecture: all
 Homepage: https://github.com/alekseyt/leech
-Depends: sed, wget, xsltproc
+Depends: xsltproc
 Description: RSS-feeds parser/files downloader
