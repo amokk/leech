@@ -80,13 +80,13 @@ fi
 # temporary file with RSS-feed
 LUNCH="$TMP/leech.lunch.$$"
 
-# wget options
+# cURL options
 #
-WGET_LUNCH_OPTS="-q -T $TIMEOUT -t $RETRY" # wget options for downloading lunch
-WGET_DOWNLOADS_OPTS="-q -T $TIMEOUT -t $RETRY --content-disposition -c -i -" # wget options for downloading files
-# --content-disposition to correctly rip torrent's filename from script like torrents.php?id=xyz
-# -c for not re-downloading torrents
-# -i - : url (passed through stdin as output of xsltproc | grep | sed)
+CURL_LUNCH_OPTS="-s --connect-timeout $TIMEOUT --retry $RETRY" # wget options for downloading files
+CURL_DOWNLOADS_OPTS=$CURL_LUNCH_OPTS
+# -s for silent mode
+# --connect-timeout to avoid hanging
+# --retry to retry failed download(s)
 
 # misc options
 #
@@ -167,7 +167,7 @@ do
     # download lunch
     #
     echo -n "Downloading feed: $FOOD... "
-    wget "$FOOD" -O "$LUNCH" $WGET_LUNCH_OPTS
+    curl $CURL_LUNCH_OPTS "$FOOD" >"$LUNCH"
 
     # don't parse lunch if download failed
     #
@@ -237,13 +237,9 @@ do
 
             sleep $DOWNLOAD_DELAY
 
-            ADDITIONAL_WGET_OPTS=""
-            if [ ! -z "$FORCE_SUFFIX" ]; then
-                FILENAME="$MD5$FORCE_SUFFIX"
-                ADDITIONAL_WGET_OPTS="-O $FILENAME"
-            fi
-
-            echo "$URL" | wget -P "$DOWNLOADS_DIR" $ADDITIONAL_WGET_OPTS $WGET_DOWNLOADS_OPTS
+            FILENAME="$DOWNLOADS_DIR/$MD5.torrent"
+            # -C to resume downloading
+            curl $CURL_DOWNLOADS_OPTS -C "$FILENAME" "$URL" >"$FILENAME"
 
             case $? in
                 0)
