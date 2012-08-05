@@ -6,5 +6,5 @@ Priority: Optional
 Version: 0.4-1
 Architecture: all
 Homepage: https://github.com/alekseyt/leech
-Depends: xsltproc
+Depends: curl, xsltproc
 Description: RSS-feeds parser/files downloader

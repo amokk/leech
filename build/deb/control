@@ -5,7 +5,7 @@ Priority: optional
 Architecture: all
 Source: https://github.com/alekseyt/leech
 Essential: no
-Depends: wget, xsltproc, grep, sed
+Depends: curl, xsltproc, grep, sed
 Installed-Size: 8192
 Maintainer: Aleksey Tulinov <aleksey.tulinov@gmail.com>
 Homepage: https://github.com/alekseyt/leech
