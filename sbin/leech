@@ -82,9 +82,10 @@ LUNCH="$TMP/leech.lunch.$$"
 
 # curl options
 #
-CURL_LUNCH_OPTS="-s --max-time $TIMEOUT --retry $RETRY --retry-max-time $TIMEOUT" # curl options for downloading lunch
+CURL_LUNCH_OPTS="-s -f --max-time $TIMEOUT --retry $RETRY --retry-max-time $TIMEOUT" # curl options for downloading lunch
 CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # curl options for downloading files
 # -s for silent, no output
+# -f for not outputting failed downloads to files
 # --max-time for timeouting, default value (30 secs) should be enough for torrent files, otherwise download will continue on next try
 # --retry for retry count of failed download(s)
 # --retry-max-time for retry timeout
@@ -248,7 +249,7 @@ do
                 # -J to extract filename from server response
             fi
 
-            curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL"
+            (cd $DOWNLOADS_DIR && exec curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL")
 
             case $? in
                 0)
