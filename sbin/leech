@@ -80,16 +80,17 @@ fi
 # temporary file with RSS-feed
 LUNCH="$TMP/leech.lunch.$$"
 
-# curl options
+# cURL options
 #
-CURL_LUNCH_OPTS="-s -f --max-time $TIMEOUT --retry $RETRY --retry-max-time $TIMEOUT" # curl options for downloading lunch
-CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # curl options for downloading files
+CURL_LUNCH_OPTS="-s -f --connection-timeout $TIMEOUT --max-time $TIMEOUT" # cURL options for downloading lunch
+CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # cURL options for downloading files
 # -s for silent, no output
 # -f for not outputting failed downloads to files
 # --max-time for timeouting, default value (30 secs) should be enough for torrent files, otherwise download will continue on next try
-# --retry for retry count of failed download(s)
-# --retry-max-time for retry timeout
 # -C - to continue incomplete downloads
+#
+# Notes:
+# --retry doesn't really work with -C - for cURL: http://curl.haxx.se/docs/knownbugs.html
 
 # misc options
 #
