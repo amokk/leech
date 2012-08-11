@@ -80,13 +80,15 @@ fi
 # temporary file with RSS-feed
 LUNCH="$TMP/leech.lunch.$$"
 
-# cURL options
+# curl options
 #
-CURL_LUNCH_OPTS="-s --connect-timeout $TIMEOUT --retry $RETRY" # wget options for downloading files
-CURL_DOWNLOADS_OPTS=$CURL_LUNCH_OPTS
-# -s for silent mode
-# --connect-timeout to avoid hanging
-# --retry to retry failed download(s)
+CURL_LUNCH_OPTS="-s --max-time $TIMEOUT --retry $RETRY --retry-max-time $TIMEOUT" # curl options for downloading lunch
+CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # curl options for downloading files
+# -s for silent, no output
+# --max-time for timeouting, default value (30 secs) should be enough for torrent files, otherwise download will continue on next try
+# --retry for retry count of failed download(s)
+# --retry-max-time for retry timeout
+# -C - to continue incomplete downloads
 
 # misc options
 #
@@ -237,9 +239,16 @@ do
 
             sleep $DOWNLOAD_DELAY
 
-            FILENAME="$DOWNLOADS_DIR/$MD5.torrent"
-            # -C to resume downloading
-            curl $CURL_DOWNLOADS_OPTS -C "$FILENAME" "$URL" >"$FILENAME"
+            if [ ! -z "$FORCE_SUFFIX" ]; then
+                FILENAME="$MD5$FORCE_SUFFIX"
+                ADDITIONAL_CURL_OPTS="-o $FILENAME"
+            else # default opts
+                ADDITIONAL_CURL_OPTS="-O -J"
+                # -O to extract filename from URL
+                # -J to extract filename from server response
+            fi
+
+            curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL"
 
             case $? in
                 0)
