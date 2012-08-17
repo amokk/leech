@@ -3,12 +3,10 @@ TESTS=$(dirname $0)/rfc822tounix.sh \
 
 run_test()
 {
-    TEST=$1
-
-    ($TEST)
+    ($1)
     RET=$?
 
-    echo -n "$SHELL:$TEST: "
+    echo -n "$SHELL:$1: "
     case $RET in
         0)
             echo "OK"
