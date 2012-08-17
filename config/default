@@ -10,6 +10,13 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PARENT_DIR=$(dirname $SCRIPT_DIR)
 XSL_TEMPLATE="$PARENT_DIR/share/leech/leech.xsl"
 
+# Force filename suffix for every download, basename will be MD5 of URL
+# This option is intended to workaround case when wget can't correctly
+# detect filename that is needed to be downloaded and resulting filenames
+# looks like download.php?id=123456
+#
+#FORCE_SUFFIX=".torrent"
+
 # Temporary directory, DOWNLOADS_DIR will be used by default
 #
 #TMP="$DOWNLOADS_DIR"

@@ -82,11 +82,11 @@ LUNCH="$TMP/leech.lunch.$$"
 
 # cURL options
 #
-CURL_LUNCH_OPTS="-s -f --connection-timeout $TIMEOUT --max-time $TIMEOUT" # cURL options for downloading lunch
+CURL_LUNCH_OPTS="-s -f --connect-timeout $TIMEOUT --max-time $TIMEOUT" # cURL options for downloading lunch
 CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # cURL options for downloading files
 # -s for silent, no output
 # -f for not outputting failed downloads to files
-# --max-time for timeouting, default value (30 secs) should be enough for torrent files, otherwise download will continue on next try
+# --connect_timeout and --max-time for timeouting, default value (30 secs) should be enough for torrent files, otherwise download will continue on next try
 # -C - to continue incomplete downloads
 #
 # Notes:
@@ -172,16 +172,17 @@ do
     #
     echo -n "Downloading feed: $FOOD... "
     curl $CURL_LUNCH_OPTS "$FOOD" >"$LUNCH"
+    RET=$?
 
     # don't parse lunch if download failed
     #
-    case $? in
+    case $RET in
         0)
             echo "OK"
             ;;
 
         *)
-            echo "Failed"
+            echo "Failed: $RET"
             rm -f "$LUNCH"
             continue
             ;;
@@ -251,13 +252,14 @@ do
             fi
 
             (cd $DOWNLOADS_DIR && exec curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL")
+            RET=$?
 
-            case $? in
+            case $RET in
                 0)
                     echo "OK"
                     ;;
                 *)
-                    echo "Failed"
+                    echo "Failed: $RET"
                     continue
                     ;;
             esac

@@ -32,7 +32,7 @@ UNIXTIME=$(date -u -d "$ISODATE" +%s)
 
 # get timezone from timestamp (+0000)
 # also replace PST with -0800, et cetera
-TIMEZONE=$(echo "$1" | sed $SED_OPTS "s/$RFC822/\7/" | sed -e "s/UT/+0000/" -e "s/UTC/+0000/" -e "s/GMT/+0000/" -e "s/EST/-0500/" -e "s/EDT/-0400/" -e "s/CST/-0600/" -e "s/CDT/-0500/" -e "s/MST/-0700/" -e "s/MDT/-0600/" -e "s/PST/-0800/" -e "s/PDT/-0700/" -e "s/A/-0100/" -e "s/M/-1200/" -e "s/N/+0100/" -e "s/Y/+1200/")
+TIMEZONE=$(echo "$1" | sed $SED_OPTS "s/$RFC822/\7/" | sed -e "s/UT/+0000/" -e "s/UTC/+0000/" -e "s/GMT/+0000/" -e "s/EST/-0500/" -e "s/EDT/-0400/" -e "s/CST/-0600/" -e "s/CDT/-0500/" -e "s/MST/-0700/" -e "s/MDT/-0600/" -e "s/PST/-0800/" -e "s/PDT/-0700/")
 
 # parse timezone value including sign of operation
 TZ_SIGN=$(expr substr "$TIMEZONE" 1 1)
