@@ -1,4 +1,6 @@
 
+.. contents::
+
 WHAT'S THIS
 -----------
 
