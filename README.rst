@@ -14,12 +14,11 @@ Torrent clients supporting watching over directory:
 
 * transmission
 * rtorrent
-* probably some else i don't know about
 
-leech is implemented in sh + wget + xsltproc + grep + sed + wget again. For periodic checks you might want to use cron. E.g.::
+leech is implemented in sh + curl + xsltproc + grep + sed + curl again. For periodic checks you might want to use cron. E.g.::
 
     # crontab -l
-    */30 * * * * CONFIG_DIR=/etc/leech DOWNLOADS_DIR=/mnt/usb/store/schedule leech
+    */30 * * * * CONFIG_DIR=/etc/leech DOWNLOADS_DIR=/mnt/usb/store/schedule /usr/sbin/leech
 
 Will run leech every 30 minutes, checking feeds and downloading all matched torrent files.
 
@@ -39,7 +38,7 @@ USAGE
 
 leech will download RSS-feeds specified in ``/etc/leech/foods``,
 transform them with xsltproc to text, match against expressions in
-``/etc/leech/downloads``, and will run wget to download matched files
+``/etc/leech/downloads``, and will run cURL to download matched files
 to ``/mnt/downloads/schedule``.
 
 DOWNLOADS_DIR might be omitted to download files to current directory.
@@ -51,7 +50,6 @@ in config/downloads match filenames you need.
 KNOWN ISSUES
 ------------
 
-* You need normal wget to make it work. Default OpenWRT's wget rippoff won't do.
 * You need to put empty line at the end of configuration files
 * OpenWrt's leech only supports Unicode encodings - see TROUBLESHOOTING_ for workaround
 * It only support RFC822_ dates in RSS - see TROUBLESHOOTING_ for workaround
@@ -64,6 +62,8 @@ WHAT'S INSIDE
 -------------
 
 * ``sbin/leech`` - main script
+* ``sbin/leech-match-test`` - matching tool
+* ``sbin/rfc822tounix`` - RFC 822 to Unix-time convertion utility
 * ``config/default`` - main configuration file
 * ``config/foods`` - feeds file
 * ``config/downloads`` - rules for files downloading
@@ -79,7 +79,7 @@ It should work out of the box.
 * edit ``config/downloads`` and add DL rules
 
 Now you should be able to run ``CONFIG_DIR=config ./leech`` and see it
-downloading feeds (to /tmp) and files (if any, to current directory).
+downloading feeds and files (if any, to current directory).
 
 * `crontab -e` and add cron job as described above, with correct paths to CONFIG_DIR, DOWNLOADS_DIR and correct path to main script.
 
@@ -153,4 +153,4 @@ file contains MD5 sum of downloaded URLs and time when it happened. DB is
 periodically cleared, old (not needed) records are deleted.
 
 Files matched ``config/downloads`` rules goes directly to DOWNLOADS_DIR. In
-case of incomplete file retrieval, wget will resume download.
+case of incomplete file retrieval, cURL will resume download.
