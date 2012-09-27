@@ -11,4 +11,6 @@ assert ()                 #  If condition false,
     echo "File \"$0\""
     exit $E_ASSERT_FAILED
   fi
+
+  echo -n .
 }

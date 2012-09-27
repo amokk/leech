@@ -1,30 +1,38 @@
 <rss version="2.0" encoding="UTF-8">
 <channel>
-	<title>leech</title>
-	<link>http://github.com/alekseyt/leech</link>
-	<description></description>
-	<item>
-		<title>expired.txt</title>
-		<category></category>
-		<link>file://./files/expired.txt</link>
-		<guid></guid>
-		<description><![CDATA[]]></description>
-		<pubDate>Sat, 11 Aug 2012 16:34:46 +0000</pubDate>
-	</item>
-	<item>
-		<title>title.txt</title>
-		<category></category>
-		<link>file://./files/sample1.txt</link>
-		<guid></guid>
-		<description><![CDATA[]]></description>
-		<pubDate>Sat, 11 Aug 2032 16:34:46 +0000</pubDate>
-	</item>
-	<item>
-		<title>[sup] title.mkv</title>
-		<category></category>
-		<link>file://./files/sample2.mkv</link>
-		<guid></guid>
-		<description><![CDATA[]]></description>
-		<pubDate>Sat, 11 Aug 2032 16:34:46 +0000</pubDate>
-	</item>
+    <title>leech</title>
+    <link>http://github.com/alekseyt/leech</link>
+    <description></description>
+    <item>
+        <title>expired.txt</title>
+        <category></category>
+        <link>file://./files/expired.txt</link>
+        <guid></guid>
+        <description><![CDATA[]]></description>
+        <pubDate>Sat, 11 Aug 2012 16:34:46 +0000</pubDate>
+    </item>
+    <item>
+        <title>title.txt</title>
+        <category></category>
+        <link>file://./files/sample1.txt</link>
+        <guid></guid>
+        <description><![CDATA[]]></description>
+        <pubDate>Sat, 11 Aug 2032 16:34:46 +0000</pubDate>
+    </item>
+    <item>
+        <title>[sup] title.mkv</title>
+        <category></category>
+        <link>file://./files/sample2.mkv</link>
+        <guid></guid>
+        <description><![CDATA[]]></description>
+        <pubDate>Sat, 11 Aug 2032 16:34:46 +0000</pubDate>
+    </item>
+    <item>
+        <title>title.wmv</title>
+        <category></category>
+        <link>file://./files/crap.wmv</link>
+        <guid></guid>
+        <description><![CDATA[]]></description>
+        <pubDate>Sat, 11 Aug 2032 16:34:46 +0000</pubDate>
+    </item>
 </channel></rss>

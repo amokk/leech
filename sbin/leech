@@ -96,7 +96,7 @@ CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # cURL options for downloading files
 #
 GREP_OPTS="-i -E" # ignore case, extended regular expressions
 SED_OPTS="-r -e"     # enable extended regular expressions
-SED_REGEX=".* (.+)\s*\"(.+)\"$" # \1 is URL, \2 is datetime in RFC822
+SED_REGEX=".* (.+) \"(.+)\"$" # \1 is URL, \2 is datetime in RFC822
 XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
 
 # persistence options
@@ -251,7 +251,7 @@ do
                 # -J to extract filename from server response
             fi
 
-            (cd $DOWNLOADS_DIR && exec curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL")
+            (cd "$DOWNLOADS_DIR" && exec curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL")
             RET=$?
 
             case $RET in

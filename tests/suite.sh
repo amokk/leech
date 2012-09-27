@@ -1,5 +1,6 @@
 
-TESTS=$(dirname $0)/rfc822tounix.sh \
+TESTS="$(dirname $0)/rfc822tounix.sh\
+    $(dirname $0)/leech.sh"
 
 run_test()
 {
