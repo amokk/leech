@@ -1,6 +1,6 @@
 . $(dirname $0)/assert.sh
 
-TOOL="../sbin/rfc822tounix"
+TOOL="$(dirname $0)/../sbin/rfc822tounix"
 
 U1033545600=$($TOOL "Wed, 02 Oct 2002 08:00:00 +0000")
 U1033545600UT=$($TOOL "Wed, 02 Oct 2002 08:00:00 UT")

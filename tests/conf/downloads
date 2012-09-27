@@ -1,2 +1,4 @@
-[sup]
+#[sup]  # [] are still the problem
+
+sup
 .*\.mkv

@@ -12,7 +12,7 @@
         <pubDate>Sat, 11 Aug 2012 16:34:46 +0000</pubDate>
     </item>
     <item>
-        <title>title.txt</title>
+        <title>sup title.txt</title>
         <category></category>
         <link>file://./files/sample1.txt</link>
         <guid></guid>
@@ -20,7 +20,7 @@
         <pubDate>Sat, 11 Aug 2032 16:34:46 +0000</pubDate>
     </item>
     <item>
-        <title>[sup] title.mkv</title>
+        <title>title.mkv</title>
         <category></category>
         <link>file://./files/sample2.mkv</link>
         <guid></guid>

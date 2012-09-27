@@ -1,15 +1,15 @@
 . $(dirname $0)/assert.sh
 
-TOOL="../sbin/leech"
+HERE=$(cd "$(dirname "$0")" && pwd)  # current dir
+TOOL="$HERE/../sbin/leech"
 
-SOURCE="files/rss.xml"
-PROCESSED="files/processed.xml"
+SOURCE="$HERE/files/rss.xml"
+PROCESSED="$HERE/files/processed.xml"
 
-PWD=$(pwd)
-LUNCH="file://$PWD/$PROCESSED"
+LUNCH="file://$PROCESSED"  # file/processed.xml
 
-export CONFIG_DIR=$(dirname $0)/conf
-export DOWNLOADS_DIR=$(dirname $0)/dl
+export CONFIG_DIR="$HERE/conf"
+export DOWNLOADS_DIR="$HERE/dl"
 
 . "$CONFIG_DIR"/default
 
@@ -18,8 +18,8 @@ rm -f "$DOWNLOADS_DIR"/.leech.db
 rm -f "$PROCESSED"
 rm -f "$FOODS"
 
-echo $LUNCH >"$FOODS"
-cat "$SOURCE" | sed -e "s|file://.|file://$PWD|" >"$PROCESSED"
+echo $LUNCH >"$FOODS"  # put processed XML into foods
+cat "$SOURCE" | sed -e "s|file://.|file://$HERE|" >"$PROCESSED"  # replace file://./files with absolute paths for cURL
 
 ($TOOL >/dev/null)
 
@@ -33,6 +33,7 @@ assert "! -f "$DOWNLOADS_DIR/$CRAP""  # no crap
 assert "-f "$DOWNLOADS_DIR/$SAMPLE_SUP""  # matches [sup]
 assert "-f "$DOWNLOADS_DIR/$SAMPLE_MKV""  # matches *.mkv
 
+# cleanup
 rm -f "$DOWNLOADS_DIR/$SAMPLE_SUP"
 rm -f "$DOWNLOADS_DIR/$SAMPLE_MKV"
 rm -f "$DOWNLOADS_DIR/.leech.db"
