@@ -49,6 +49,10 @@ if [ -z "$DOWNLOADS_DIR" ]; then
     DOWNLOADS_DIR=.
 fi
 
+if [ -z "$DOWNLOAD_RECIPE" ]; then
+    DOWNLOAD_RECIPE="leech-default"
+fi
+
 if [ -z "$TMP" ]; then
     TMP=$DOWNLOADS_DIR
 fi
@@ -208,19 +212,15 @@ do
             fi
 
             echo -n "Downloading: $URL... "
-
             sleep $DOWNLOAD_DELAY
 
-            if [ ! -z "$FORCE_SUFFIX" ]; then
-                FILENAME="$MD5$FORCE_SUFFIX"
-                ADDITIONAL_CURL_OPTS="-o $FILENAME"
-            else # default opts
-                ADDITIONAL_CURL_OPTS="-O -J"
-                # -O to extract filename from URL
-                # -J to extract filename from server response
-            fi
+            (LEECH_TMP="$TMP" \
+             LEECH_DOWNLOADS_DIR="$DOWNLOADS_DIR" \
+             LEECH_TIMEOUT="$TIMEOUT" \
+             LEECH_URL="$URL" \
+             LEECH_URL_MD5="$MD5" \
+             $DOWNLOAD_RECIPE >/dev/null 2>&1)
 
-            (cd "$DOWNLOADS_DIR" && exec curl $CURL_DOWNLOADS_OPTS $ADDITIONAL_CURL_OPTS "$URL")
             RET=$?
 
             case $RET in

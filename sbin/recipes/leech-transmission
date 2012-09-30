@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# TODO: read transmission host from $1
+# TODO: read username from $2
+# TODO: read password from $3
+
+transmission-remote -a "$LEECH_URL"

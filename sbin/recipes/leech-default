@@ -1,0 +1,3 @@
+#!/bin/sh
+
+cd $LEECH_DOWNLOADS_DIR && exec curl -s -f --connect-timeout $LEECH_TIMEOUT --max-time $LEECH_TIMEOUT -C - -o $LEECH_URL_MD5.torrent $LEECH_URL
