@@ -1,4 +1,4 @@
-VERSION=0.4
+VERSION=0.5
 BUILD=1
 TARGET=sbin/leech
 MATCH_TEST_TARGET=sbin/leech-match-test
