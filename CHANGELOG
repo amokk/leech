@@ -1,3 +1,7 @@
+0.5
+
+[+] migrated from wget to cURL
+
 0.4
 
 [*] fixed check for file being present in .leech.db in it's not created yet
