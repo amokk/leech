@@ -57,13 +57,21 @@ if [ -z "$PERSISTENCE" ]; then
     PERSISTENCE=$DOWNLOADS_DIR
 fi
 
+DB="$PERSISTENCE/.leech.db"
+
 if [ -z "$EXPIRATION" ]; then
     EXPIRATION=1 # day
 fi
 
+# set expiration in seconds
+EXPIRATION=$(($EXPIRATION * 86400)) # days * seconds in a day
+
 if [ -z "$HISTORY" ]; then
     HISTORY=14 # day
 fi
+
+# set history in seconds
+HISTORY=$(($HISTORY * 86400)) # days * seconds in a day
 
 if [ -z "$DOWNLOAD_DELAY" ]; then
     DOWNLOAD_DELAY=5
@@ -99,6 +107,10 @@ XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
 #
 DB_REGEX="(.+) (.+)" # \1 is md5, \2 is timestamp
 
+# config processing
+#
+GREP_FILTER_COMMENTS="^\s*[^#]" # skip lines that start with # or empty
+
 # prepare environment
 #
 
@@ -111,13 +123,18 @@ if [ ! -d "$TMP" ]; then
     fi
 fi
 
-# remove previous lunch if any
-rm -f "$LUNCH"
-
 # create downloads dir
-if [ ! -z "$DOWNLOADS_DIR" ] && [ ! -d "$DOWNLOADS_DIR" ]; then
+if [ ! -d "$DOWNLOADS_DIR" ]; then
     echo "WARNING: Downloads directory \"$DOWNLOADS_DIR\" doesn't exist, creating it."
     mkdir -p "$DOWNLOADS_DIR"
+    if [ ! $? -eq 0 ]; then
+        exit 1
+    fi
+fi
+
+if [ ! -d "$PERSISTENCE" ]; then
+    echo "WARNING: Persistence directory \"$PERSISTENCE\" doesn't exist, creating it"
+    mkdir -p "$PERSISTENCE"
     if [ ! $? -eq 0 ]; then
         exit 1
     fi
@@ -126,44 +143,13 @@ fi
 # current time
 NOW=$(date -u +%s)
 
-# set expiration in seconds
-if [ ! -z "$EXPIRATION" ]; then
-    EXPIRATION=$(($EXPIRATION * 86400)) # days * seconds in a day
-fi
-
-# set history in seconds
-if [ ! -z "$HISTORY" ]; then
-    HISTORY=$(($HISTORY * 86400)) # days * seconds in a day
-fi
-
-# create persistence dir and db
-if [ ! -z "$PERSISTENCE" ]; then
-    if [ ! -d "$PERSISTENCE" ]; then
-        echo "WARNING: Persistence directory \"$PERSISTENCE\" doesn't exist, creating it"
-        mkdir -p "$PERSISTENCE"
-        if [ ! $? -eq 0 ]; then
-            exit 1
-        fi
-    fi
-
-    DB="$PERSISTENCE/.leech.db"
-fi
+# remove previous lunch if any
+rm -f "$LUNCH"
 
 # downloading
 #
-while read FOOD
+cat "$FOODS" | grep -re $GREP_FILTER_COMMENTS | while read FOOD
 do
-    # skip comments and empty strings
-    TAG=$(expr substr "$FOOD" 1 1)
-    case $TAG in
-        '#')
-            continue
-            ;;
-        '')
-            continue
-            ;;
-    esac
-
     # download lunch
     #
     echo -n "Downloading feed: $FOOD... "
@@ -186,19 +172,8 @@ do
 
     # search lunch for patterns
     #
-    while read -r PATTERN # -r to read backslashes
+    cat "$DOWNLOADS" | grep -re $GREP_FILTER_COMMENTS | while read -r PATTERN # -r to read backslashes
     do
-        # skip comments and empty strings
-        TAG=$(expr substr "$PATTERN" 1 1)
-        case $TAG in
-            '#')
-                continue
-                ;;
-            '')
-                continue
-                ;;
-        esac
-
         # download urls if any
         #
         xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN" | while read STR
@@ -217,7 +192,7 @@ do
                 UNIXTIME=""
             fi
 
-            # if expiration set, check RSS entry pub date
+            # check RSS entry pub date
             if [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
                 echo "Skipping $URL: expired"
                 continue
@@ -225,13 +200,11 @@ do
 
             MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
 
-            # if persistence enabled - check md5 of URL for duplicates
-            if [ -f "$DB" ]; then
-                grep "$MD5" "$DB" 2>&1 >/dev/null
-                if [ $? -eq 0 ]; then
-                    echo "Skipping $URL: already downloaded"
-                    continue
-                fi
+            # check md5 of URL for duplicates
+            grep "$MD5" "$DB" >/dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo "Skipping $URL: already downloaded"
+                continue
             fi
 
             echo -n "Downloading: $URL... "
@@ -260,21 +233,19 @@ do
                     ;;
             esac
 
-            # if persistence enabled, make a record in DB about downloaded file
-            if [ ! -z "$DB" ]; then
-                echo "$MD5 $NOW" >>"$DB"
-            fi
+            # make a record in DB about downloaded file
+            echo "$MD5 $NOW" >>"$DB"
         done
-    done <"$DOWNLOADS"
+    done
 
     # cleanup
     #
     rm -f "$LUNCH"
-done <"$FOODS"
+done
 
 # delete old records from DB
 #
-if [ ! -z "$DB" ] && [ -f "$DB" ]; then
+if [ -f "$DB" ]; then
     DB_TMP="$DB.tmp"
     rm -f "$DB_TMP" && touch "$DB_TMP"
 
