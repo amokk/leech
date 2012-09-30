@@ -73,10 +73,6 @@ if [ -z "$TIMEOUT" ]; then
     TIMEOUT=30 # seconds
 fi
 
-if [ -z "$RETRY" ]; then
-    RETRY=1 # attempts
-fi
-
 # temporary file with RSS-feed
 LUNCH="$TMP/leech.lunch.$$"
 
