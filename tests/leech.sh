@@ -1,5 +1,10 @@
 . $(dirname $0)/assert.sh
 
+file_md5() {
+    FILENAME=$1
+    echo "$(expr substr "$(md5sum $FILENAME)" 1 32)"
+}
+
 HERE=$(cd "$(dirname "$0")" && pwd)  # current dir
 TOOL="$HERE/../sbin/leech"
 
@@ -23,22 +28,26 @@ cat "$SOURCE" | sed -e "s|file://.|file://$HERE|" >"$PROCESSED"  # replace file:
 
 ($TOOL >/dev/null)
 
-EXPIRED=expired.txt
-SAMPLE_SUP=sample1.txt
-SAMPLE_MKV=sample2.mkv
-CRAP=crap.wmv
+SAMPLE_SUP="$HERE/files/sample1.txt"
+SAMPLE_MKV="$HERE/files/sample2.mkv"
+MD5S="$(file_md5 "$SAMPLE_SUP") $(file_md5 "$SAMPLE_MKV")"
 
-assert "! -f "$DOWNLOADS_DIR/$EXPIRED""  # expired record shouldn't be downloaded
-assert "! -f "$DOWNLOADS_DIR/$CRAP""  # no crap
-assert "-f "$DOWNLOADS_DIR/$SAMPLE_SUP""  # matches [sup]
-assert "-f "$DOWNLOADS_DIR/$SAMPLE_MKV""  # matches *.mkv
+# expired record shouldn't be downloaded
+# crap record shouldn't be downloaded
+# only two records: SAMPLE_SUP and SAMPLE_MKV
+#
+assert "$(ls $DOWNLOADS_DIR | grep ".torrent" | wc -l) -eq 2"
+
+# each downloaded file md5sum should be present in $MD5S string
+#
+ls $DOWNLOADS_DIR | grep ".torrent" | while read FILENAME; do
+    FILENAME="$DOWNLOADS_DIR/$FILENAME"
+    FILENAME_MD5=$(file_md5 "$FILENAME")
+    assert ""$(echo $MD5S | grep $FILENAME_MD5)" == $MD5S"
+done
 
 # cleanup
-rm -f "$DOWNLOADS_DIR/$SAMPLE_SUP"
-rm -f "$DOWNLOADS_DIR/$SAMPLE_MKV"
+rm -f "$DOWNLOADS_DIR/*"
 rm -f "$DOWNLOADS_DIR/.leech.db"
 rm -f "$PROCESSED"
 rm -f "$FOODS"
-
-DL_CONTENT=$(ls -a "$DOWNLOADS_DIR" | wc -l)
-assert "$DL_CONTENT -eq 2"  # check that DL dir is empty after cleanup (nothing else was downloaded)
