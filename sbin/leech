@@ -214,12 +214,13 @@ do
             echo -n "Downloading: $URL... "
             sleep $DOWNLOAD_DELAY
 
-            (LEECH_TMP="$TMP" \
+            (exec
+             LEECH_TMP="$TMP" \
              LEECH_DOWNLOADS_DIR="$DOWNLOADS_DIR" \
              LEECH_TIMEOUT="$TIMEOUT" \
              LEECH_URL="$URL" \
              LEECH_URL_MD5="$MD5" \
-             $DOWNLOAD_RECIPE >/dev/null 2>&1)
+             $DOWNLOAD_RECIPE)
 
             RET=$?
 

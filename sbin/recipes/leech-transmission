@@ -1,5 +1,14 @@
 #!/bin/sh
 
+usage() {
+    echo "This is transmission-specific download recipe for leech"
+}
+
+if [ -z "$LEECH_DOWNLOADS_DIR" ]; then
+    usage
+    exit 1
+fi
+
 # TODO: read transmission host from $1
 # TODO: read username from $2
 # TODO: read password from $3
