@@ -176,67 +176,67 @@ do
 
     # search lunch for patterns
     #
-    cat "$DOWNLOADS" | grep -re $GREP_FILTER_COMMENTS | while read -r PATTERN # -r to read backslashes
+    # PATTERNS=cat $DOWNLOADS | remove comments | join the rest with "|"
+    # then xsltproc $LUNCH | grep $PATTERNS
+    #
+    xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS \
+        $(cat "$DOWNLOADS" | grep -re $GREP_FILTER_COMMENTS | paste -sd "|") | while read STR
     do
-        # download urls if any
-        #
-        xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN" | while read STR
-        do
-            URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
+        URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
 
-            if [ -z "$URL" ]; then
+        # FIXME: filter out empty lines or not effective anymore (after grep -re $GREP_FILTER_COMMENTS)
+        if [ -z "$URL" ]; then
+            continue
+        fi
+
+        # timestamp in RSS is in RFC822 format, it need to be converted to string understandable by `date`
+        TIMESTAMP=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
+        UNIXTIME=$($RFC822TOUNIX "$TIMESTAMP")
+        if [ ! $? -eq 0 ]; then
+            echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
+            UNIXTIME=""
+        fi
+
+        # check RSS entry pub date
+        if [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
+            echo "Skipping $URL: expired"
+            continue
+        fi
+
+        MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
+
+        # check md5 of URL for duplicates
+        grep "$MD5" "$DB" >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo "Skipping $URL: already downloaded"
+            continue
+        fi
+
+        echo -n "Downloading: $URL... "
+        sleep $DOWNLOAD_DELAY
+
+        (exec
+         LEECH_TMP="$TMP" \
+         LEECH_DOWNLOADS_DIR="$DOWNLOADS_DIR" \
+         LEECH_TIMEOUT="$TIMEOUT" \
+         LEECH_URL="$URL" \
+         LEECH_URL_MD5="$MD5" \
+         $DOWNLOAD_RECIPE)
+
+        RET=$?
+
+        case $RET in
+            0)
+                echo "OK"
+                ;;
+            *)
+                echo "Failed: $RET"
                 continue
-            fi
+                ;;
+        esac
 
-            # timestamp in RSS is in RFC822 format, it need to be converted to string understandable by `date`
-            TIMESTAMP=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
-            UNIXTIME=$($RFC822TOUNIX "$TIMESTAMP")
-            if [ ! $? -eq 0 ]; then
-                echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
-                UNIXTIME=""
-            fi
-
-            # check RSS entry pub date
-            if [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
-                echo "Skipping $URL: expired"
-                continue
-            fi
-
-            MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
-
-            # check md5 of URL for duplicates
-            grep "$MD5" "$DB" >/dev/null 2>&1
-            if [ $? -eq 0 ]; then
-                echo "Skipping $URL: already downloaded"
-                continue
-            fi
-
-            echo -n "Downloading: $URL... "
-            sleep $DOWNLOAD_DELAY
-
-            (exec
-             LEECH_TMP="$TMP" \
-             LEECH_DOWNLOADS_DIR="$DOWNLOADS_DIR" \
-             LEECH_TIMEOUT="$TIMEOUT" \
-             LEECH_URL="$URL" \
-             LEECH_URL_MD5="$MD5" \
-             $DOWNLOAD_RECIPE)
-
-            RET=$?
-
-            case $RET in
-                0)
-                    echo "OK"
-                    ;;
-                *)
-                    echo "Failed: $RET"
-                    continue
-                    ;;
-            esac
-
-            # make a record in DB about downloaded file
-            echo "$MD5 $NOW" >>"$DB"
-        done
+        # make a record in DB about downloaded file
+        echo "$MD5 $NOW" >>"$DB"
     done
 
     # cleanup
