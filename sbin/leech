@@ -152,7 +152,7 @@ rm -f "$LUNCH"
 
 # downloading
 #
-cat "$FOODS" | grep -re $GREP_FILTER_COMMENTS | while read FOOD
+cat "$FOODS" | grep -r -e $GREP_FILTER_COMMENTS | while read FOOD
 do
     # download lunch
     #
@@ -175,17 +175,25 @@ do
     esac
 
     # search lunch for patterns
-    #
     # PATTERNS=cat $DOWNLOADS | remove comments | join the rest with "|"
     # then xsltproc $LUNCH | grep $PATTERNS
     #
     xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS \
-        $(cat "$DOWNLOADS" | grep -re $GREP_FILTER_COMMENTS | paste -sd "|") | while read STR
+        $(cat "$DOWNLOADS" | grep -re $GREP_FILTER_COMMENTS | sed $SED_OPTS "s/(.*)/ -e \1/" | tr "\n" " ") | while read STR
     do
         URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
 
         # FIXME: filter out empty lines or not effective anymore (after grep -re $GREP_FILTER_COMMENTS)
         if [ -z "$URL" ]; then
+            continue
+        fi
+
+        MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
+
+        # check md5 of URL for duplicates
+        grep "$MD5" "$DB" >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo "Skipping $URL: already downloaded"
             continue
         fi
 
@@ -200,15 +208,6 @@ do
         # check RSS entry pub date
         if [ ! -z "$UNIXTIME" ] && [ $(($NOW - $UNIXTIME)) -gt $EXPIRATION ]; then
             echo "Skipping $URL: expired"
-            continue
-        fi
-
-        MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
-
-        # check md5 of URL for duplicates
-        grep "$MD5" "$DB" >/dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            echo "Skipping $URL: already downloaded"
             continue
         fi
 
