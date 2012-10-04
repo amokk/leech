@@ -11,17 +11,17 @@ PARENT_DIR=$(dirname $SCRIPT_DIR)
 XSL_TEMPLATE="$PARENT_DIR/share/leech/leech.xsl"
 
 # Available recipes:
-#  - leech-default:
-#      just download files to $DOWNLOADS_DIR, doesn't do anything else
+#  leech-default:
+#    just download files to $DOWNLOADS_DIR, doesn't do anything else
 #
-#  - leech-transmission [HOST] [USERNAME] [PASSWORD]:
-#      don't download file, add URL directly to transmission instead
-#      transmission will download file and do all the magic
-#      you need transmission-remote installed and web interface enabled
-#      [HOST] optional, host name where transmission web is installed
-#      [USERNAME] optional, username to use when adding URL to transmission
-#      [PASSWORD] optional, password to use when adding URL to transmission
+#  leech-transmission [HOST[:PORT]] [USERNAME:PASSWORD]:
+#    don't download file, add URL directly to transmission instead
+#    transmission will download file and do all the magic
+#    you need transmission-remote installed and web interface enabled
+#
 #DOWNLOAD_RECIPE="leech-default"
+#DOWNLOAD_RECIPE="leech-transmission"
+#DOWNLOAD_RECIPE="leech-transmission 127.0.0.1:9091 user:password"
 
 # Temporary directory, DOWNLOADS_DIR will be used by default
 #
