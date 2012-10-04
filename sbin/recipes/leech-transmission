@@ -4,7 +4,7 @@ usage() {
     echo "This is transmission-specific download recipe for leech"
     echo "$0 [HOST[:PORT]] [USERNAME] [PASSWORD]"
     echo
-    echo "[HOST:PORT]          optional, transmission host and maybe port"
+    echo "[HOST[:PORT]]        optional, transmission host and maybe port"
     echo "[USERNAME:PASSWORD]  optional, transmission web username and password"
 }
 
@@ -19,11 +19,11 @@ USERNAME_PASSWORD=$2
 TRANSMISSION_OPTS=
 
 if [ ! -z "$HOST_PORT" ]; then
-	TRANSMISSION_OPTS="$TRANSMISSION_OPTS "$HOST_PORT""
+    TRANSMISSION_OPTS="$TRANSMISSION_OPTS "$HOST_PORT""
 fi
 
 if [ ! -z "$USERNAME_PASSWORD" ]; then
-	TRANSMISSION_OPTS="$TRANSMISSION_OPTS -n "$USERNAME_PASSWORD""
+    TRANSMISSION_OPTS="$TRANSMISSION_OPTS -n "$USERNAME_PASSWORD""
 fi
 
 exec transmission-remote $TRANSMISSION_OPTS -a "$LEECH_URL"
