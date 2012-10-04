@@ -220,7 +220,7 @@ do
              LEECH_TIMEOUT="$TIMEOUT" \
              LEECH_URL="$URL" \
              LEECH_URL_MD5="$MD5" \
-             $DOWNLOAD_RECIPE)
+             $DOWNLOAD_RECIPE >/dev/null)
 
             RET=$?
 
