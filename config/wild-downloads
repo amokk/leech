@@ -1,0 +1,17 @@
+# Filenames matching rules below will be downloaded from feeds you
+# specified in food file. Matching is case-insensitive.
+#
+# NOTE: Put empty line at the end of file
+#
+# Rules are simple:
+#
+# yo ho ho would match any files containing "yo", "ho" and "ho" 
+# in that order
+#
+# You might also match files using usual wildcards: * and ?
+# For instance: yo h? ho
+#
+# If you need fine-graned control on matching - see $CONFIG_DIR/downloads
+#
+
+

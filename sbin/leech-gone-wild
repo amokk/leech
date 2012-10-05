@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Author: Aleksey Tulinov <aleksey.tulinov@gmail.com>
+
+grep -r -e "^\s*[^#]" | sed -r -e "s/\?/./g" -e "s/\*/.*/g" -e "s/\s+/.*/g"
