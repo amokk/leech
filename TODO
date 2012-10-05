@@ -1,0 +1,4 @@
+[ ] tests on downloads matching and reading (backslashes, etc)
+[ ] regular wildcards in downloads instead of regexes
+[ ] it doesn't look safe enough to dl torrent directly to the .torrent
+    file, might be better to dl to tmp file, then mv

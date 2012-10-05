@@ -26,6 +26,11 @@ rm -f "$FOODS"
 echo $LUNCH >"$FOODS"  # put processed XML into foods
 cat "$SOURCE" | sed -e "s|file://.|file://$HERE|" >"$PROCESSED"  # replace file://./files with absolute paths for cURL
 
+# sanity check: $DOWNLOADS_DIR is actually empty before test, etc
+#
+assert "$(ls $DOWNLOADS_DIR | wc -l) -eq 0"
+assert "! -f $DOWNLOADS_DIR/.leech.db"
+
 ($TOOL >/dev/null)
 
 SAMPLE_SUP="$HERE/files/sample1.txt"
