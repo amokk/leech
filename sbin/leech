@@ -85,17 +85,22 @@ if [ -z "$TIMEOUT" ]; then
     TIMEOUT=30 # seconds
 fi
 
+if [ -z "$MAGNET" ]; then
+   MAGNET=1 # magnet URLs enabled
+fi
+
 # temporary file with RSS-feed
 LUNCH="$TMP/leech.lunch.$$"
 
 # cURL options
 #
-CURL_LUNCH_OPTS="-s -f --connect-timeout $TIMEOUT --max-time $TIMEOUT" # cURL options for downloading lunch
+CURL_LUNCH_OPTS="-k -s -f --connect-timeout $TIMEOUT --max-time $TIMEOUT" # cURL options for downloading lunch
 CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # cURL options for downloading files
 # -s for silent, no output
 # -f for not outputting failed downloads to files
 # --connect_timeout and --max-time for timeouting, default value (30 secs) should be enough for torrent files, otherwise download will continue on next try
 # -C - to continue incomplete downloads
+# -k - do not validate SSL
 #
 # Notes:
 # --retry doesn't really work with -C - for cURL: http://curl.haxx.se/docs/knownbugs.html
@@ -104,7 +109,6 @@ CURL_DOWNLOADS_OPTS="$CURL_LUNCH_OPTS -C -" # cURL options for downloading files
 #
 GREP_OPTS="-i -E" # ignore case, extended regular expressions
 SED_OPTS="-r -e"     # enable extended regular expressions
-SED_REGEX=".* (.+) \"(.+)\"$" # \1 is URL, \2 is datetime in RFC822
 XSLT_OPTS="--novalid" # skip loading DTDs during XSL transformation
 
 # persistence options
@@ -182,14 +186,27 @@ do
         #
         xsltproc $XSLT_OPTS "$XSL_TEMPLATE" "$LUNCH" | grep $GREP_OPTS "$PATTERN" | while read STR
         do
-            URL=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\1/")
+            NAME=$(echo $STR | awk -F";" '{print $1}')
+            URL=$(echo $STR | awk -F";" '{print $2}')
+            TIMESTAMP=$(echo $STR | awk -F";" '{print $3}')
+            FILENAME=$(echo $URL |awk -F"/" '{print $NF}')
 
             if [ -z "$URL" ]; then
                 continue
             fi
 
+            # skip magnet links if disabled
+            # ash can't perform 'if' string comparsion ?
+            case $URL in
+                   magnet*)
+                    if [ $MAGNET -eq 0 ]; then
+                        echo "Skipping magnet link: $URL"
+                        continue
+                    fi
+                    ;;
+            esac
+
             # timestamp in RSS is in RFC822 format, it need to be converted to string understandable by `date`
-            TIMESTAMP=$(echo $STR | sed $SED_OPTS "s/$SED_REGEX/\2/")
             UNIXTIME=$($RFC822TOUNIX "$TIMESTAMP")
             if [ ! $? -eq 0 ]; then
                 echo "WARNING: RSS timestamp ($TIMESTAMP) can't be parsed correctly, expiration feature might not work properly"
@@ -202,7 +219,7 @@ do
                 continue
             fi
 
-            MD5=$(expr substr "$(echo -n "$URL" | md5sum)" 1 32) #"
+            MD5=$(expr substr "$(echo -n "$NAME" | md5sum)" 1 32) #"
 
             # check md5 of URL for duplicates
             grep "$MD5" "$DB" >/dev/null 2>&1
@@ -214,15 +231,19 @@ do
             echo -n "Downloading: $URL... "
             sleep $DOWNLOAD_DELAY
 
-            (exec
-             LEECH_TMP="$TMP" \
-             LEECH_DOWNLOADS_DIR="$DOWNLOADS_DIR" \
-             LEECH_TIMEOUT="$TIMEOUT" \
-             LEECH_URL="$URL" \
-             LEECH_URL_MD5="$MD5" \
-             $DOWNLOAD_RECIPE >/dev/null)
-
-            RET=$?
+            case $URL in
+                magnet*)
+                    FILENAME=$(echo $NAME |tr " " ".")
+                    cd "$DOWNLOADS_DIR" && echo $URL > $FILENAME.magnet
+                ;;
+                *torrent) # files
+                    (cd "$DOWNLOADS_DIR" && exec curl $CURL_DOWNLOADS_OPTS -o $FILENAME "$URL")
+                    RET=$?
+                ;;
+                *)  # short URLS
+                    (cd "$DOWNLOADS_DIR" && exec curl $CURL_DOWNLOADS_OPTS -O -J "$URL")
+                ;;
+            esac
 
             case $RET in
                 0)
